@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "mobile",
+  "description": "Android: push + notifications + speech (kiln-mobile), kiln:// deep links, QR pairing.",
+  "windows": ["main"],
+  "platforms": ["android"],
+  "permissions": [
+    "kiln-mobile:default",
+    "deep-link:default",
+    "barcode-scanner:default"
+  ]
+}

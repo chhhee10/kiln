@@ -1,0 +1,19 @@
+# Kiln's Android shell plugin: UnifiedPush registration + native
+# notifications (channels, inline actions that call the daemon without
+# opening the app, tap → deep link), Android SpeechRecognizer for voice mode.
+# Kotlin lives in android/; see ../../ANDROID.md.
+[package]
+name = "tauri-plugin-kiln-mobile"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+rust-version = "1.77.2"
+links = "tauri-plugin-kiln-mobile"
+publish = false
+
+[dependencies]
+tauri = { version = "2.12.4" }
+serde = { version = "1", features = ["derive"] }
+
+[build-dependencies]
+tauri-plugin = { version = "2.7.2", features = ["build"] }

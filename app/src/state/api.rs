@@ -172,12 +172,16 @@ impl AppState {
             let req = LoginRequest {
                 email,
                 password,
-                client: Some(if platform::is_tauri() {
+                client: Some(if platform::is_tauri() && platform::is_android_ua() {
+                    ClientKind::Android
+                } else if platform::is_tauri() {
                     ClientKind::Desktop
                 } else {
                     ClientKind::Web
                 }),
-                device_name: Some(if platform::is_tauri() {
+                device_name: Some(if platform::is_tauri() && platform::is_android_ua() {
+                    "Kiln Android".into()
+                } else if platform::is_tauri() {
                     "Kiln desktop".into()
                 } else {
                     "Browser".into()
@@ -476,14 +480,31 @@ impl AppState {
     /// Send a planner message. `thread == None` starts a new thread in
     /// `project`; the route switches to it once created.
     pub fn send_message(&self, thread: Option<ThreadId>, project: ProjectId, body: String) {
+        self.send_message_voice(thread, project, body, false);
+    }
+
+    /// [`Self::send_message`] with the "dictated" flag (Android voice mode
+    /// marks the bubble "◉ voice").
+    pub fn send_message_voice(
+        &self,
+        thread: Option<ThreadId>,
+        project: ProjectId,
+        body: String,
+        voice: bool,
+    ) {
         if body.trim().is_empty() {
             return;
         }
         if self.is_demo() {
             let now = chrono::Utc::now();
-            let (tid, evs) = self
+            let (tid, mut evs) = self
                 .data
                 .with_untracked(|d| demo::act_send(d, thread, project, &body, now));
+            for e in &mut evs {
+                if let ServerEvent::Message { message } = e {
+                    message.voice = voice;
+                }
+            }
             self.apply_events(evs);
             if thread != Some(tid) {
                 platform::set_hash(&Route::Planner(Some(tid)).to_hash());
@@ -505,10 +526,7 @@ impl AppState {
         let app = *self;
         spawn_local(async move {
             match thread {
-                Some(t) => match c
-                    .send_message(t, &SendMessageRequest { body, voice: false })
-                    .await
-                {
+                Some(t) => match c.send_message(t, &SendMessageRequest { body, voice }).await {
                     Ok(m) => app.data.update(|d| d.push_message(m)),
                     Err(e) => app.fail(e),
                 },
@@ -516,7 +534,7 @@ impl AppState {
                     .create_thread(&CreateThreadRequest {
                         project_id: project,
                         message: body,
-                        voice: false,
+                        voice,
                     })
                     .await
                 {
@@ -601,6 +619,47 @@ impl AppState {
                         }
                     });
                     finish(app, r.summary);
+                }
+                Err(e) => app.fail(e),
+            }
+        });
+    }
+
+    /// Approve & dispatch without leaving the current screen (Android: the
+    /// plan card resolves in place). `done` receives the dispatched tasks.
+    pub fn approve_plan_in_place(&self, plan: PlanId, done: impl Fn(Vec<Task>) + 'static) {
+        if self.is_demo() {
+            let now = chrono::Utc::now();
+            if let Some(o) = self.with_sim(|s, d| demo::act_approve(s, d, plan, now)) {
+                let tasks: Vec<Task> = o
+                    .events
+                    .iter()
+                    .filter_map(|e| match e {
+                        ServerEvent::TaskUpserted { task } => Some(task.clone()),
+                        _ => None,
+                    })
+                    .collect();
+                self.apply_events(o.events);
+                done(tasks);
+            }
+            return;
+        }
+        let Some(c) = self.client() else { return };
+        let app = *self;
+        let version = self
+            .data
+            .with_untracked(|d| d.plans.get(&plan).map(|p| p.version));
+        spawn_local(async move {
+            match c.approve_plan(plan, &ApprovePlanRequest { version }).await {
+                Ok(r) => {
+                    let tasks = r.tasks.clone();
+                    app.data.update(|d| {
+                        d.upsert_plan(r.plan);
+                        for t in r.tasks.into_iter().rev() {
+                            d.upsert_task(t);
+                        }
+                    });
+                    done(tasks);
                 }
                 Err(e) => app.fail(e),
             }
@@ -837,6 +896,99 @@ impl AppState {
                 Err(e) => app.fail(e),
             }
         });
+    }
+
+    /// Complete device pairing from a `kiln://pair?url=…&code=…` link (the
+    /// QR shown on desktop / TUI): connect to `server_url`, exchange the
+    /// one-time code for a session and sign in.
+    pub fn pair_complete(
+        &self,
+        server_url: String,
+        code: String,
+        on_error: impl Fn(String) + 'static,
+    ) {
+        let base = server_url.trim().trim_end_matches('/').to_string();
+        if base.is_empty() || code.trim().is_empty() {
+            on_error("That pairing code is incomplete".into());
+            return;
+        }
+        let app = *self;
+        platform::local_set(STORAGE_SERVER, &base);
+        let client = Client::new(base.clone());
+        self.backend.set_value(Backend::Live(client.clone()));
+        let android = platform::is_android_ua();
+        spawn_local(async move {
+            let req = PairCompleteRequest {
+                code: code.trim().to_string(),
+                client: if android {
+                    ClientKind::Android
+                } else if platform::is_tauri() {
+                    ClientKind::Desktop
+                } else {
+                    ClientKind::Web
+                },
+                device_name: if android {
+                    "Kiln Android".into()
+                } else {
+                    "Kiln".into()
+                },
+            };
+            match client.pair_complete(&req).await {
+                Ok(r) => {
+                    app.remember_token(&client, &r.token);
+                    if let Ok(info) = client.info().await {
+                        app.data.update(|d| d.server = Some(info));
+                    }
+                    match client.me().await {
+                        Ok(me) => app.data.update(|d| d.load_me(me)),
+                        Err(_) => app.data.update(|d| d.me = Some(r.user)),
+                    }
+                    app.signed_in().await;
+                    app.toast("Paired · this device is signed in", true);
+                }
+                Err(e) => on_error(e.to_string()),
+            }
+        });
+    }
+
+    /// Register this device's UnifiedPush endpoint with the daemon.
+    pub fn register_push(
+        &self,
+        endpoint: String,
+        device_name: String,
+        done: impl Fn(bool) + 'static,
+    ) {
+        if self.is_demo() {
+            done(true);
+            return;
+        }
+        let Some(c) = self.client() else {
+            done(false);
+            return;
+        };
+        let app = *self;
+        spawn_local(async move {
+            match c
+                .register_push(&RegisterPushRequest {
+                    endpoint,
+                    device_name,
+                })
+                .await
+            {
+                Ok(_) => done(true),
+                Err(e) => {
+                    done(false);
+                    app.fail(e);
+                }
+            }
+        });
+    }
+
+    /// The bearer token of the live session, when this client keeps one
+    /// (cross-origin clients such as the Tauri WebView). Native code (the
+    /// Android push service) uses it to act on notifications in the background.
+    pub fn session_token(&self) -> Option<String> {
+        self.client().and_then(|c| c.token())
     }
 
     /// Start device pairing; `on_done` gets the QR + code.

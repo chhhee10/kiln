@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <queries>
+        <!-- SpeechRecognizer.isRecognitionAvailable() on Android 11+. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
+    <application>
+        <!-- UnifiedPush events (new endpoint, message, unregistered). -->
+        <service
+            android:name="dev.kiln.mobile.KilnPushService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.unifiedpush.android.connector.PUSH_EVENT" />
+            </intent-filter>
+        </service>
+        <!-- Notification action buttons: call the daemon without opening the app. -->
+        <receiver
+            android:name="dev.kiln.mobile.NotificationActionReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

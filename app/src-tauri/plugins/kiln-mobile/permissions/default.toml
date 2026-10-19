@@ -1,0 +1,13 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = "Push registration, notification deep links and speech recognition for the Kiln Android app."
+permissions = [
+    "allow-register-push",
+    "allow-unregister-push",
+    "allow-take-pending-link",
+    "allow-start-listening",
+    "allow-stop-listening",
+    "allow-register-listener",
+    "allow-remove-listener",
+]

@@ -37,7 +37,13 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "dmg", "appimage", "deb", "rpm"],
+    "targets": [
+      "app",
+      "dmg",
+      "appimage",
+      "deb",
+      "rpm"
+    ],
     "category": "DeveloperTool",
     "shortDescription": "Plan it. Dispatch it. Review the PR.",
     "longDescription": "Desktop and Android client for Kiln, a self-hosted platform that runs Builder, QA and Reviewer coding agents on your team's machine.",
@@ -52,10 +58,24 @@
       "minimumSystemVersion": "12.0"
     },
     "linux": {
-      "deb": { "depends": [] }
+      "deb": {
+        "depends": []
+      }
     },
     "android": {
       "minSdkVersion": 26
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "mobile": [
+        {
+          "scheme": [
+            "kiln"
+          ],
+          "appLink": false
+        }
+      ]
     }
   }
 }
