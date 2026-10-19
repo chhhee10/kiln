@@ -48,8 +48,10 @@ mod native {
                 tokio::select! {
                     msg = source.next() => match msg {
                         Some(Ok(WsMessage::Text(t))) => {
-                            if let Some(ev) = crate::decode_server_event(t.as_str()) {
-                                if ev_tx.send(ev).await.is_err() { break; }
+                            if let Some(ev) = crate::decode_server_event(t.as_str())
+                                && ev_tx.send(ev).await.is_err()
+                            {
+                                break;
                             }
                         }
                         Some(Ok(WsMessage::Ping(p))) => { let _ = sink.send(WsMessage::Pong(p)).await; }
