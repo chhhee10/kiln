@@ -1,0 +1,46 @@
+# Per-project extras layered on the base worker image (DECISIONS.md #2).
+#
+# The daemon renders this template from `qa.yaml: extras` and builds it with an
+# empty context, tagging the result `kiln/worker-extras:<project>-<hash>` where
+# <hash> covers the base image digest and the extras lists, so unchanged extras
+# reuse the cached image. Placeholders (`{{…}}`) are replaced with shell-quoted,
+# space-separated package lists; a block whose list is empty is dropped.
+#
+#   qa.yaml
+#     extras:
+#       apt:   [postgresql-client, libvips-dev]
+#       npm:   [pnpm@9, "@biomejs/biome"]
+#       cargo: [cargo-nextest, sqlx-cli]
+#       pip:   [pytest, httpx]
+
+ARG BASE_IMAGE=kiln/worker:latest
+FROM ${BASE_IMAGE}
+
+USER root
+
+{{#apt}}
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends {{apt}} \
+ && rm -rf /var/lib/apt/lists/*
+{{/apt}}
+
+{{#npm}}
+RUN npm install -g --no-audit --no-fund {{npm}} && rm -rf /root/.npm
+{{/npm}}
+
+{{#cargo}}
+# Rust toolchain is only installed when cargo extras are requested.
+ENV RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
+RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --no-modify-path \
+ && cargo install --locked {{cargo}} \
+ && rm -rf /opt/cargo/registry /opt/cargo/git \
+ && chmod -R a+rwX /opt/cargo /opt/rustup
+{{/cargo}}
+
+{{#pip}}
+RUN python3 -m pip install --no-cache-dir --break-system-packages {{pip}}
+{{/pip}}
+
+USER kiln
+WORKDIR /workspace
+ENTRYPOINT ["kiln-runner", "run"]

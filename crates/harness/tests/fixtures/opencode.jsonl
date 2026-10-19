@@ -1,0 +1,7 @@
+{"type":"step_start","timestamp":1790499442000,"sessionID":"ses_1","part":{"id":"prt_1","sessionID":"ses_1","messageID":"msg_1","type":"step-start"}}
+{"type":"text","timestamp":1790499443000,"sessionID":"ses_1","part":{"id":"prt_2","type":"text","text":"Looking at the retry module.","time":{"start":1,"end":2}}}
+{"type":"reasoning","timestamp":1790499443000,"sessionID":"ses_1","part":{"id":"prt_r","type":"reasoning","text":"Need jitter.","time":{"start":1,"end":2}}}
+{"type":"tool_use","timestamp":1790499444000,"sessionID":"ses_1","part":{"id":"prt_3","type":"tool","callID":"call_1","tool":"bash","state":{"status":"completed","input":{"command":"ls"},"output":"src\nCargo.toml","title":"ls","metadata":{}}}}
+{"type":"tool_use","timestamp":1790499445000,"sessionID":"ses_1","part":{"id":"prt_4","type":"tool","callID":"call_2","tool":"edit","state":{"status":"error","input":{"filePath":"/workspace/x"},"error":"File not found"}}}
+{"type":"step_finish","timestamp":1790499446000,"sessionID":"ses_1","part":{"id":"prt_5","type":"step-finish","reason":"stop","cost":0.0123,"tokens":{"input":1000,"output":200,"reasoning":50,"cache":{"read":300,"write":0}}}}
+{"type":"error","timestamp":1790499447000,"sessionID":"ses_1","error":{"name":"ProviderAuthError","data":{"providerID":"anthropic","message":"Invalid API key"}}}

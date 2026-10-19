@@ -1,0 +1,6 @@
+{"type":"step","title":"read task"}
+{"type":"log","level":"INFO","message":"mock builder attempt 1"}
+{"type":"command","command":"git commit -m wip","exit_code":0,"output":""}
+{"type":"progress","percent":50,"label":"halfway"}
+{"type":"usage","tokens_in":10,"tokens_out":5,"cost_usd":0.0}
+not an event

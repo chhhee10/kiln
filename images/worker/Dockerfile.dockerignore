@@ -1,0 +1,13 @@
+# Build context filter for images/worker/Dockerfile (BuildKit picks up
+# <Dockerfile>.dockerignore automatically).
+**/target
+**/target-*
+**/node_modules
+**/dist
+.git
+design
+docs
+config
+*.zip
+app/src-tauri/gen
+images/**/*.md

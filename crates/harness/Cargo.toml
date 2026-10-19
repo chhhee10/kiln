@@ -1,8 +1,16 @@
 [package]
 name = "kiln-harness"
+description = "Harness trait and adapters (Claude Agent SDK, Codex, OpenCode, mock) that normalize agent output into Kiln run events."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 kiln-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

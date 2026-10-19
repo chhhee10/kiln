@@ -1,0 +1,3 @@
+{"type":"assistant","message":{"id":"msg_x","role":"assistant","content":[{"type":"text","text":"Invalid API key"}]},"error":"authentication_failed","parent_tool_use_id":null,"uuid":"e1","session_id":"s"}
+{"type":"result","subtype":"error_max_turns","is_error":true,"duration_ms":1000,"duration_api_ms":900,"num_turns":50,"stop_reason":null,"total_cost_usd":2.5,"usage":{"input_tokens":10,"output_tokens":20},"modelUsage":{},"permission_denials":[],"errors":["Reached maximum number of turns (50)"],"uuid":"z2","session_id":"s"}
+{"type":"kiln_error","message":"query() threw: spawn claude ENOENT"}
