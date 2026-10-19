@@ -382,7 +382,7 @@ impl Scheduler {
 
         // Dead containers whose run is ingested (or unknown).
         if let Ok(list) = self.runtime.list_managed().await {
-            for c in list.into_iter().filter(|c| !c.running) {
+            for c in list.into_iter().filter(|c| !c.running && self.owns(c)) {
                 let remove = match c.run_id() {
                     Some(r) => match self.store.get_run(r).await {
                         Ok(run) => run.state.is_finished() && run.ingested,

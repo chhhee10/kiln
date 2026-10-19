@@ -221,7 +221,7 @@ async fn qa_fails_twice_then_passes() {
         vec![1, 2, 3]
     );
     // Attempt 2's prompt carries QA's failure.
-    let cfg = env.run_config(builders[1].id);
+    let cfg = env.run_config(builders[1].id).await;
     assert!(
         cfg.prompt.contains("filter resets on refresh"),
         "{}",
@@ -274,7 +274,7 @@ async fn reviewer_changes_requested_loops_with_findings() {
         .into_iter()
         .find(|r| r.role == WorkerRole::Builder && r.attempt == 2)
         .unwrap();
-    let prompt = env.run_config(b2.id).prompt;
+    let prompt = env.run_config(b2.id).await.prompt;
     assert!(prompt.contains("Reviewer requested changes"), "{prompt}");
     assert!(prompt.contains("mock: please add a test"), "{prompt}");
     env.sched.shutdown().await;
@@ -381,7 +381,7 @@ async fn human_stop_retry_feedback_escalate() {
         .into_iter()
         .find(|r| r.role == WorkerRole::Builder && r.attempt == 3)
         .unwrap();
-    let prompt = env.run_config(b3.id).prompt;
+    let prompt = env.run_config(b3.id).await.prompt;
     assert!(prompt.contains(note), "{prompt}");
 
     // Escalate while it builds: admins and the owner are told.

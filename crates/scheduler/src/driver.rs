@@ -756,6 +756,7 @@ impl Scheduler {
                     .diff_summary(&prepared.worktree.path, &prepared.base_branch)
                     .await
                     .unwrap_or_default();
+                self.persist_diff(run.id, &diff).await;
                 let qa = self
                     .latest_outcome(task, WorkerRole::Qa)
                     .await?
@@ -859,5 +860,43 @@ impl Scheduler {
             }
         }
         String::new()
+    }
+}
+
+impl Scheduler {
+    /// Keep the diff after the worktree is gone (it's removed at Ready): the
+    /// daemon's task view falls back to a `Diff` artifact holding this JSON.
+    async fn persist_diff(&self, run: kiln_types::RunId, diff: &kiln_types::DiffSummary) {
+        let rel = "out/artifacts/diff.json";
+        let path = self.run_dir(run).join(rel);
+        let Ok(json) = serde_json::to_vec(diff) else {
+            return;
+        };
+        if let Some(dir) = path.parent()
+            && let Err(e) = tokio::fs::create_dir_all(dir).await
+        {
+            tracing::debug!(error = %e, "cannot create artifact dir for diff");
+            return;
+        }
+        if let Err(e) = tokio::fs::write(&path, &json).await {
+            tracing::debug!(error = %e, "cannot write diff artifact");
+            return;
+        }
+        let _ = self
+            .store
+            .insert_artifact(kiln_store::NewArtifact {
+                run_id: run,
+                kind: kiln_types::ArtifactKind::Diff,
+                path: rel.into(),
+                size: json.len() as u64,
+                mime: "application/json".into(),
+                caption: Some(format!(
+                    "+{} −{} · {} files",
+                    diff.additions,
+                    diff.deletions,
+                    diff.files.len()
+                )),
+            })
+            .await;
     }
 }

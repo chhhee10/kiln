@@ -119,7 +119,7 @@ async fn thread_to_plan_versions_to_tasks() {
     // The second planner run saw the whole conversation and the v1 draft.
     let runs = env.store.list_runs_for_thread(thread).await.unwrap();
     assert_eq!(runs.len(), 2);
-    let prompt = env.run_config(runs[1].id).prompt;
+    let prompt = env.run_config(runs[1].id).await.prompt;
     assert!(
         prompt.contains("Also log each retry") && prompt.contains("Current plan draft"),
         "{prompt}"

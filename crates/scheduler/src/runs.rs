@@ -252,6 +252,7 @@ impl Scheduler {
                 s.labels.insert(LABEL_RUN_ID.into(), run.id.to_string());
                 s.labels.insert(LABEL_ROLE.into(), "service".into());
                 s.labels.insert(LABEL_OWNER.into(), spec.owner.to_string());
+                self.tag_instance(&mut s.labels);
                 self.runtime.ensure_image(&svc.image).await?;
                 let id = self.runtime.create(&s).await?;
                 meta.sidecars.push(id.clone());
@@ -301,6 +302,7 @@ impl Scheduler {
         c.labels
             .insert(LABEL_ROLE.into(), spec.role.as_str().into());
         c.labels.insert(LABEL_OWNER.into(), spec.owner.to_string());
+        self.tag_instance(&mut c.labels);
         if let Some(t) = &spec.task {
             c.labels.insert(LABEL_TASK.into(), t.key.clone());
         }

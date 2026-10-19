@@ -29,6 +29,7 @@ mod dispatch;
 mod driver;
 mod error;
 mod ingest;
+mod instance;
 mod jobs;
 mod machine;
 mod planning;

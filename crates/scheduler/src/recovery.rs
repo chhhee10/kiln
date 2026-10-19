@@ -105,7 +105,7 @@ impl Scheduler {
         // theirs until ingest removes it.
         match self.runtime.list_managed().await {
             Ok(list) => {
-                for c in list {
+                for c in list.into_iter().filter(|c| self.owns(c)) {
                     let Some(rid) = c.run_id() else {
                         let _ = self.runtime.remove(&c.id).await;
                         continue;

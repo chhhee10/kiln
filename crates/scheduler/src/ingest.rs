@@ -97,7 +97,10 @@ impl Scheduler {
     pub(crate) async fn remove_run_containers(&self, run: RunId) {
         match self.runtime.list_managed().await {
             Ok(list) => {
-                for c in list.into_iter().filter(|c| c.run_id() == Some(run)) {
+                for c in list
+                    .into_iter()
+                    .filter(|c| c.run_id() == Some(run) && self.owns(c))
+                {
                     if let Err(e) = self.runtime.remove(&c.id).await {
                         tracing::debug!(run = %run, error = %e, "container remove failed");
                     }

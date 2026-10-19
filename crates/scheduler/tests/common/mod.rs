@@ -419,13 +419,27 @@ impl Env {
             .collect()
     }
 
-    pub fn run_config(&self, run: RunId) -> kiln_types::protocol::RunConfig {
+    /// The run's persisted `config.json`. The run row is created before the
+    /// file is written, so wait for it to appear (and parse) first.
+    pub async fn run_config(&self, run: RunId) -> kiln_types::protocol::RunConfig {
         let p = self
             .data
             .join("runs")
             .join(run.to_string())
             .join("config.json");
-        serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap()
+        let start = Instant::now();
+        loop {
+            if let Ok(bytes) = std::fs::read(&p)
+                && let Ok(cfg) = serde_json::from_slice(&bytes)
+            {
+                return cfg;
+            }
+            assert!(
+                start.elapsed() < Duration::from_secs(20),
+                "no config.json for run {run}"
+            );
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
     }
 
     pub async fn runs(&self, task: TaskId) -> Vec<Run> {
