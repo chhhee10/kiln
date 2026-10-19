@@ -1,8 +1,46 @@
 [package]
 name = "kiln-scheduler"
+description = "Kiln scheduler: persistent queue, admission control, fair-share, dependency gating, the Builder → QA → Reviewer task state machine, run lifecycle, planner sessions, ingest and crash recovery."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 kiln-types.workspace = true
+kiln-store.workspace = true
+kiln-events.workspace = true
+kiln-auth.workspace = true
+kiln-vault.workspace = true
+kiln-notifier.workspace = true
+kiln-sandbox.workspace = true
+kiln-harness.workspace = true
+kiln-gitops.workspace = true
+kiln-planner.workspace = true
+kiln-memory.workspace = true
+
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+futures.workspace = true
+tokio = { workspace = true, features = ["full"] }
+sqlx.workspace = true
+serde_norway = "0.9.42"
+sysinfo = { version = "0.39.6", default-features = false, features = ["system", "disk"] }
+libc = "0.2.191"
+
+[dev-dependencies]
+tempfile.workspace = true
+anyhow.workspace = true
+tokio = { workspace = true, features = ["full", "test-util"] }
+# The `kiln-runner-dev` example wraps the runner library for the tests.
+kiln-runner.workspace = true
+clap.workspace = true
+
+[[example]]
+# A copy of the `kiln-runner` binary for the integration tests (ProcessRuntime
+# needs a runner executable on the host). `cargo test` builds examples.
+name = "kiln-runner-dev"
+path = "examples/kiln-runner-dev.rs"
