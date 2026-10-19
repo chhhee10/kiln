@@ -1,8 +1,46 @@
 [package]
 name = "kiln-memory"
+description = "Kiln company brain: memory gateway, L0-L3 layers, hybrid retrieval, distillation, packs and nightly maintenance."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
+default = ["parquet"]
+# Nightly compaction of L0 jsonl.zst segments into Parquet (zstd).
+parquet = ["dep:parquet", "dep:arrow-array", "dep:arrow-schema"]
+# ONNX embeddings + reranker via fastembed (downloads models into <data>/models on first use).
+fastembed = ["dep:fastembed"]
+# LanceDB vector index at <data>/index/lance (needs `protoc` to build).
+lance = ["dep:lancedb", "dep:futures"]
+# Ad-hoc SQL over L0 (compacted Parquet + fresh JSONL) via DataFusion.
+datafusion = ["parquet", "dep:datafusion"]
+full = ["parquet", "fastembed", "lance", "datafusion"]
+
 [dependencies]
 kiln-types.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+tokio = { workspace = true, features = ["sync", "rt", "fs"] }
+async-trait.workspace = true
+tantivy = "0.27"
+zstd = "0.14"
+
+parquet = { version = "60", optional = true, default-features = false, features = ["arrow", "zstd"] }
+arrow-array = { version = "60", optional = true }
+arrow-schema = { version = "60", optional = true }
+fastembed = { version = "7", optional = true, default-features = false, features = ["ort-download-binaries-rustls-tls", "hf-hub-rustls-tls"] }
+datafusion = { version = "55", optional = true, default-features = false, features = ["parquet", "sql", "compression"] }
+lancedb = { version = "0.40", optional = true, features = ["remote"] }
+futures = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tempfile.workspace = true
+sqlx.workspace = true
+anyhow.workspace = true
