@@ -14,6 +14,7 @@ use tokio::sync::broadcast;
 
 /// Everything that flows on the bus.
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)] // events are shared behind Arc
 pub enum Event {
     /// Forwarded to clients (after per-user filtering).
     Server(ServerEvent),

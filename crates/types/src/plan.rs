@@ -179,10 +179,10 @@ impl PlanSpec {
             rest = &body[end + 3..];
         }
         // Last resort: outermost braces.
-        if let (Some(a), Some(b)) = (trimmed.find('{'), trimmed.rfind('}')) {
-            if a < b {
-                return serde_json::from_str::<PlanSpec>(&trimmed[a..=b]).map_err(|e| e.to_string());
-            }
+        if let (Some(a), Some(b)) = (trimmed.find('{'), trimmed.rfind('}'))
+            && a < b
+        {
+            return serde_json::from_str::<PlanSpec>(&trimmed[a..=b]).map_err(|e| e.to_string());
         }
         Err("no plan JSON found in planner output".into())
     }

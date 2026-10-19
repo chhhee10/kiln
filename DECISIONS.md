@@ -41,4 +41,9 @@ Made autonomously on 2026-10-19 to unblock the build. Each one is reversible; th
 - **Master key:** OS keychain via `keyring`; when no keychain/Secret Service is available (headless Linux), falls back to `<data_dir>/master.key` (0600) and logs a warning.
 - **Push:** UnifiedPush/ntfy via HTTP POST to the device's registered endpoint; ntfy server is self-hosted and optional.
 - **Merged detection** polls open PRs every 5 min (no public webhook endpoint since there's no public listener).
+- **Task visibility:** board cards (title, state, owner, progress) are visible to the whole team, so the board's people filter is useful. Logs, transcripts, artifacts, QA report bodies and verdicts are **owner-only** (admins see metadata, not content), meeting PRD §13 "never read another user's … artifacts".
+- **Stacked dependencies:** if task B depends on A and A is Ready (PR open, unmerged), B branches from A's branch and its PR targets A's branch. Once A is merged, dependents use the default branch.
+- **Stop** moves a task to `Cancelled` (gray, meta "Stopped"), matching the desktop mock. Retry re-queues it.
+- **Feedback on an escalated task** grants exactly one more Builder attempt; it doesn't reset the whole loop budget.
+- **Git:** mutating git operations (mirror, worktree add/remove, push) shell out to the `git` CLI because gix's worktree/push support is incomplete; gix is used for reads where convenient. Credentials reach git through `GIT_ASKPASS`/env, never argv.
 - **Commits:** the local git repo was initialised and the build is committed in milestones so work is recoverable. Nothing has been pushed anywhere.

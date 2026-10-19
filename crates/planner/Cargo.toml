@@ -1,8 +1,13 @@
 [package]
 name = "kiln-planner"
+description = "Role prompt templates (planner, builder, QA, reviewer, distiller) and plan schema helpers for Kiln."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 kiln-types.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+chrono.workspace = true

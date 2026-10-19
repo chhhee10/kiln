@@ -78,7 +78,7 @@ axum = { version = "0.8.9", features = ["ws", "macros"] }
 tower = "0.5.3"
 tower-http = { version = "0.7.1", features = ["fs", "trace", "cors"] }
 sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "sqlite", "macros", "migrate", "chrono", "uuid", "json"] }
-reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "stream"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "query", "rustls", "stream"] }
 clap = { version = "4.6.7", features = ["derive", "env"] }
 rand = "0.10.3"
 tempfile = "3"

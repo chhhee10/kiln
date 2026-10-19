@@ -1,8 +1,24 @@
 [package]
 name = "kiln-gitops"
+description = "Bare mirrors, task worktrees, guarded branch pushes and PR providers for Kiln."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 kiln-types.workspace = true
+async-trait.workspace = true
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+reqwest.workspace = true
+base64 = "0.22.1"
+jsonwebtoken = { version = "11.1.0", default-features = false, features = ["use_pem", "aws_lc_rs"] }
+gix = { version = "0.89.0", default-features = false, features = ["sha1", "revision"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+wiremock = "0.6.5"

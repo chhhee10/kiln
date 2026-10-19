@@ -64,7 +64,7 @@ impl User {
 
 pub fn initials_for(name: &str) -> String {
     let mut parts = name.split_whitespace().filter_map(|p| p.chars().next());
-    match (parts.next(), parts.last()) {
+    match (parts.next(), parts.next_back()) {
         (Some(a), Some(b)) => format!("{}{}", a, b).to_uppercase(),
         (Some(a), None) => a.to_uppercase().collect(),
         _ => "?".into(),

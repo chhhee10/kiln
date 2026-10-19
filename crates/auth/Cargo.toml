@@ -1,8 +1,23 @@
 [package]
 name = "kiln-auth"
+description = "Kiln authentication: argon2id passwords, session tokens, domain allowlist and device pairing codes."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 kiln-types.workspace = true
+kiln-store.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+rand.workspace = true
+tokio = { workspace = true, features = ["sync"] }
+argon2 = "0.6.0"
+sha2 = "0.11.1"
+base64 = "0.23.1"
+hex = "0.4.3"
+subtle = "2.6.1"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

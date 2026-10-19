@@ -49,6 +49,7 @@ pub mod paths {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
+#[allow(clippy::large_enum_variant)] // sent once per line; boxing buys nothing
 pub enum RunnerMessage {
     Hello { run_id: RunId, token: String, runner_version: String, protocol: u32 },
     Event { event: RunEvent },

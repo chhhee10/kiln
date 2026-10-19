@@ -1,8 +1,20 @@
 [package]
 name = "kiln-store"
+description = "Kiln control store: SQLite (WAL) schema, migrations, typed queries and the persistent job queue."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 kiln-types.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tempfile.workspace = true

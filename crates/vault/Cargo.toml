@@ -1,8 +1,27 @@
 [package]
 name = "kiln-vault"
+description = "Kiln credential vault: ChaCha20-Poly1305 encryption under a keychain-held master key, dispatch env mapping and secret redaction."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 kiln-types.workspace = true
+kiln-store.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+async-trait.workspace = true
+reqwest.workspace = true
+rand.workspace = true
+chacha20poly1305 = "0.11.0"
+keyring = "4.2.0"
+base64 = "0.23.1"
+regex = "1.13.1"
+aho-corasick = "1.1.5"
+zeroize = "1.9.1"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tempfile.workspace = true
+serde_json.workspace = true
