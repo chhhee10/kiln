@@ -1,0 +1,14 @@
+[package]
+name = "kiln-events"
+description = "Internal event bus: every state change is published once, fanned out to WebSocket, notifier, L0 spool and distiller."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+kiln-types.workspace = true
+tokio = { workspace = true, features = ["sync"] }
+tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

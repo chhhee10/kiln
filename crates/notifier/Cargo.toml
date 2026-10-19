@@ -1,0 +1,8 @@
+[package]
+name = "kiln-notifier"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+kiln-types.workspace = true

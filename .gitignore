@@ -1,0 +1,7 @@
+/target
+/app/dist
+/app/src-tauri/target
+**/*.rs.bk
+/data
+.env
+node_modules
