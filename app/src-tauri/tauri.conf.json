@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Kiln",
+  "version": "0.1.0",
+  "identifier": "dev.kiln.app",
+  "build": {
+    "beforeDevCommand": "trunk serve --port 1420",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "trunk build --release",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Kiln",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1120,
+        "minHeight": 700,
+        "resizable": true,
+        "backgroundColor": "#0f1115"
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' ipc: http://ipc.localhost",
+        "script-src": "'self' 'wasm-unsafe-eval'",
+        "style-src": "'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src": "'self' https://fonts.gstatic.com",
+        "img-src": "'self' data: blob: https: http:",
+        "media-src": "'self' blob: https: http:",
+        "connect-src": "'self' ipc: http://ipc.localhost https: http: wss: ws:"
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "appimage", "deb", "rpm"],
+    "category": "DeveloperTool",
+    "shortDescription": "Plan it. Dispatch it. Review the PR.",
+    "longDescription": "Desktop and Android client for Kiln, a self-hosted platform that runs Builder, QA and Reviewer coding agents on your team's machine.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.png"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "12.0"
+    },
+    "linux": {
+      "deb": { "depends": [] }
+    },
+    "android": {
+      "minSdkVersion": 26
+    }
+  }
+}

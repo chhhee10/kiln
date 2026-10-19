@@ -1,0 +1,38 @@
+# Tauri 2 shell for the Kiln desktop (macOS, Linux) and Android apps.
+# Excluded from the root workspace: it needs WebKitGTK (Linux) / Xcode
+# (macOS) / the Android SDK + NDK. Build from app/:
+#   cargo tauri dev | cargo tauri build            (desktop)
+#   cargo tauri android init && cargo tauri android build   (Android)
+# The frontend is the trunk build of ../ (kiln-app), bundled from ../dist.
+[package]
+name = "kiln-desktop"
+version = "0.1.0"
+description = "Kiln desktop + Android shell (Tauri 2)"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+rust-version = "1.77.2"
+
+[lib]
+# `_lib` suffix avoids a name clash with the bin on Windows; the
+# staticlib/cdylib kinds are required for the Android/iOS targets.
+name = "kiln_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.3", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.4", features = [] }
+tauri-plugin-opener = "2.7.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "s"
+panic = "abort"
+strip = true
+
+# Standalone (not part of the root workspace; see header).
+[workspace]

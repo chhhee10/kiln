@@ -1,8 +1,29 @@
 [package]
 name = "kiln-app"
+description = "Kiln desktop + Android UI (Leptos, client-side rendered). Built with trunk; wrapped by Tauri 2 in src-tauri/ and served by kilnd at /app."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 kiln-types.workspace = true
+kiln-api-client.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+futures.workspace = true
+chrono.workspace = true
+uuid = { workspace = true, features = ["js"] }
+leptos = { version = "0.8.22", features = ["csr"] }
+wasm-bindgen = "0.2.106"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = [
+  "Window", "Document", "Element", "HtmlElement", "HtmlDocument", "Storage", "Location", "History",
+  "KeyboardEvent", "MouseEvent", "Event", "EventTarget", "Navigator", "HtmlInputElement",
+  "HtmlTextAreaElement", "HtmlSelectElement", "MediaQueryList", "DomRect", "CssStyleDeclaration",
+  "Url", "UrlSearchParams", "Clipboard", "console", "HashChangeEvent", "Performance", "DomTokenList", "ScrollIntoViewOptions", "ScrollLogicalPosition",
+] }
+console_error_panic_hook = "0.1.7"

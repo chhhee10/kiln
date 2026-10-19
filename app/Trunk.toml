@@ -1,0 +1,16 @@
+# Build with `trunk build --release` from app/. Output: app/dist/ (served by kilnd at /app,
+# bundled by Tauri as frontendDist).
+[build]
+target = "index.html"
+dist = "dist"
+# Relative asset URLs so the same dist works at /app/ (daemon), at / (trunk serve) and
+# inside the Tauri WebView.
+public_url = "./"
+filehash = true
+
+[watch]
+ignore = ["src-tauri", "dist"]
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8090
