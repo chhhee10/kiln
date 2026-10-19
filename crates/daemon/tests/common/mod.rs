@@ -116,6 +116,7 @@ impl Env {
 
     /// Start a daemon on this env's data dir.
     pub async fn start(&self) -> Daemon {
+        init_tracing();
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
             .await
             .expect("bind");
@@ -379,4 +380,15 @@ pub async fn approve_and_finish(c: &Client, plan: &Plan) -> Vec<Task> {
         Some(out)
     })
     .await
+}
+
+/// Opt-in test logging: set `RUST_LOG` (e.g. `kiln_memory=debug`) to see
+/// daemon traces in test output.
+fn init_tracing() {
+    if std::env::var_os("RUST_LOG").is_some() {
+        let _ = tracing_subscriber::fmt()
+            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+            .with_test_writer()
+            .try_init();
+    }
 }

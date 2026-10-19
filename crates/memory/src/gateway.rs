@@ -1013,6 +1013,13 @@ impl Memory {
         let e = &existing.item;
         let id = e.id.to_string();
         let new_sal = (e.salience.max(salience) + 0.05).min(1.0);
+        // Resolve share targets before opening the write transaction: a
+        // second pool acquisition while holding one can starve the pool.
+        let valid_shares = if p.visibility == Visibility::Shared && !p.shared_with.is_empty() {
+            self.existing_users(&p.shared_with).await?
+        } else {
+            BTreeSet::new()
+        };
         let mut tx = self.pool.begin_with("BEGIN IMMEDIATE").await?;
         sqlx::query("UPDATE memory_items SET salience = ?, use_count = use_count + 1, updated_at = ? WHERE id = ?")
             .bind(f64::from(new_sal))
@@ -1037,8 +1044,7 @@ impl Memory {
             .execute(&mut *tx)
             .await?;
             if wants == Visibility::Shared {
-                let valid = self.existing_users(&p.shared_with).await?;
-                for u in valid.iter().filter(|u| **u != owner) {
+                for u in valid_shares.iter().filter(|u| **u != owner) {
                     sqlx::query(
                         "INSERT OR IGNORE INTO memory_shares (item_id, user_id) VALUES (?, ?)",
                     )
