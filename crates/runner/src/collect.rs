@@ -81,6 +81,8 @@ pub fn artifact_kind(path: &Path) -> ArtifactKind {
         "jsonl" | "cast" => ArtifactKind::Transcript,
         "json" if name == "qa_report.json" => ArtifactKind::QaReport,
         "json" if name == "verdict.json" => ArtifactKind::Verdict,
+        // The scheduler persists the reviewed `DiffSummary` here.
+        "json" if name == "diff.json" => ArtifactKind::Diff,
         "json" | "xml" | "html" | "htm" | "zip" | "lcov" => ArtifactKind::TestReport,
         _ => ArtifactKind::Other,
     }
@@ -510,6 +512,7 @@ mod tests {
             ArtifactKind::QaReport
         );
         assert_eq!(artifact_kind(Path::new("x.patch")), ArtifactKind::Diff);
+        assert_eq!(artifact_kind(Path::new("out/artifacts/diff.json")), ArtifactKind::Diff);
         assert_eq!(artifact_kind(Path::new("server.log")), ArtifactKind::Log);
         assert_eq!(artifact_kind(Path::new("noext")), ArtifactKind::Other);
     }

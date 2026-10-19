@@ -256,14 +256,7 @@ impl Mock {
     }
 
     fn planner(&mut self) {
-        let feature = self
-            .cfg
-            .prompt
-            .lines()
-            .map(str::trim)
-            .find(|l| !l.is_empty())
-            .map(|l| l.chars().take(80).collect::<String>())
-            .unwrap_or_else(|| "Mock feature".into());
+        let feature = mock_feature(&self.cfg.prompt);
         let plan = PlanSpec {
             feature: feature.clone(),
             description: format!("Mock plan for: {feature}"),
@@ -422,4 +415,32 @@ pub fn main() -> i32 {
         cost_usd: 0.0,
     });
     m.num("mock.exit_code", 0) as i32
+}
+
+/// Title for the mock plan: the latest user message in the planner prompt
+/// (the line after the last `**User**…:` marker), else the first non-heading
+/// line.
+fn mock_feature(prompt: &str) -> String {
+    let lines: Vec<&str> = prompt.lines().map(str::trim).collect();
+    let after_user = lines
+        .iter()
+        .rposition(|l| l.starts_with("**User**"))
+        .and_then(|i| lines[i + 1..].iter().find(|l| !l.is_empty()));
+    after_user
+        .or_else(|| lines.iter().find(|l| !l.is_empty() && !l.starts_with('#')))
+        .map(|l| l.chars().take(80).collect::<String>())
+        .unwrap_or_else(|| "Mock feature".into())
+}
+
+#[cfg(test)]
+mod feature_tests {
+    use super::mock_feature;
+
+    #[test]
+    fn takes_latest_user_message() {
+        let p = "# Project: X\n\n# Conversation\n\n**User**:\nfirst idea\n\n**Planner (you)**:\nok\n\n**User** (dictated by voice):\nAdd a verbose flag\n";
+        assert_eq!(mock_feature(p), "Add a verbose flag");
+        assert_eq!(mock_feature("# Heading\nplain line"), "plain line");
+        assert_eq!(mock_feature(""), "Mock feature");
+    }
 }

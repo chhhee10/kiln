@@ -100,11 +100,17 @@ impl Scheduler {
             None => None,
         };
         let episode = self.memory.distill(&run, task.as_ref()).await?;
+        // The heuristic pass above runs for every run. The LLM Distiller (a
+        // model session on the owner's key) runs once per attempt, after the
+        // Reviewer, when it can see the diff, QA report and verdict, plus
+        // when a task ended Escalated/Failed so failures are learned from.
+        let task_failed = task
+            .as_ref()
+            .is_some_and(|t| matches!(t.state, TaskState::Escalated | TaskState::Failed));
         let llm = if self.cfg.llm_distill
-            && matches!(
-                run.role,
-                WorkerRole::Builder | WorkerRole::Qa | WorkerRole::Reviewer
-            ) {
+            && (run.role == WorkerRole::Reviewer
+                || (task_failed && matches!(run.role, WorkerRole::Builder | WorkerRole::Qa)))
+        {
             match self.run_distiller(&run, task.as_ref(), &episode).await {
                 Ok(o) => o,
                 Err(SchedulerError::ShuttingDown) => return Err(SchedulerError::ShuttingDown),
