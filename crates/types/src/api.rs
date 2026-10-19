@@ -26,6 +26,7 @@
 //! | POST | /threads | CreateThreadRequest → ThreadDetail | user |
 //! | GET  | /threads/{id} | → ThreadDetail | owner |
 //! | POST | /threads/{id}/messages | SendMessageRequest → Message | owner (planner replies arrive over WS) |
+//! | GET  | /plans | PlanListQuery (query string) → Vec<Plan> | user (own) |
 //! | PUT  | /plans/{id} | UpdatePlanRequest → Plan | owner |
 //! | POST | /plans/{id}/approve | ApprovePlanRequest → ApprovePlanResponse | owner |
 //! | GET  | /memory | MemoryQuery → MemoryListResponse | user (visibility-filtered) |
@@ -282,6 +283,15 @@ pub struct SendMessageRequest {
     pub body: String,
     #[serde(default)]
     pub voice: bool,
+}
+
+/// `GET /plans`: the caller's plans, newest first (TUI plan list).
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct PlanListQuery {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status: Option<PlanStatus>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project: Option<ProjectId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

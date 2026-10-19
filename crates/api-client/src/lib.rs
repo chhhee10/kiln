@@ -65,6 +65,9 @@ impl Client {
     /// (no trailing `/api/v1`). Empty string = same origin (browser).
     pub fn new(base: impl Into<String>) -> Self {
         let base = base.into().trim_end_matches('/').to_string();
+        // reqwest on wasm needs absolute URLs: "" means the page's own origin.
+        #[cfg(target_arch = "wasm32")]
+        let base = if base.is_empty() { ws::same_origin() } else { base };
         #[cfg(not(target_arch = "wasm32"))]
         let http = reqwest::Client::builder()
             .user_agent(format!("kiln-client/{}", kiln_types::VERSION))
@@ -269,6 +272,10 @@ impl Client {
     }
     pub async fn send_message(&self, id: ThreadId, req: &SendMessageRequest) -> Result<Message> {
         self.post(&format!("/threads/{id}/messages"), req).await
+    }
+    /// The caller's plans, optionally filtered by status and project.
+    pub async fn plans(&self, q: &PlanListQuery) -> Result<Vec<Plan>> {
+        self.get_q("/plans", q).await
     }
     pub async fn update_plan(&self, id: PlanId, req: &UpdatePlanRequest) -> Result<Plan> {
         self.put(&format!("/plans/{id}"), req).await

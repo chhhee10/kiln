@@ -1,0 +1,125 @@
+# Kiln daemon configuration (kilnd).
+#
+# Location (first match wins):
+#   1. kilnd serve --config <path>
+#   2. $KILN_CONFIG
+#   3. <data_dir>/kiln.toml      (data_dir = $KILN_DATA_DIR or the platform default)
+#
+# Every key is optional; the values below are the defaults unless noted.
+# Environment overrides (applied after this file):
+#   KILN_DATA_DIR, KILN_WEB_DIR, KILN_BIND, KILN_PORT, KILN_PUBLIC_URL,
+#   KILN_RUNTIME, KILN_WORKER_IMAGE, KILN_RUNNER_BIN, KILN_GITHUB_MODE,
+#   KILN_GITHUB_APP_ID, KILN_GITHUB_PRIVATE_KEY_PATH, KILN_NTFY_URL,
+#   KILN_LLM_DISTILL, KILN_LOG, KILN_LOG_FORMAT
+# Vault: KILN_MASTER_KEY (base64 32-byte key) and KILN_NO_KEYCHAIN=1 are read
+# by the vault directly.
+#
+# A leading "~" in any path expands to $HOME.
+
+# Root of all state: SQLite db, mirrors, worktrees, run folders, memory indexes.
+# Default: "~/Library/Application Support/kiln" on macOS, "~/.local/share/kiln" on Linux.
+# Keep it short: run sockets live at <data_dir>/runs/<uuid>/kiln.sock and Unix
+# socket paths are limited to ~104 bytes (kilnd refuses to start above 100).
+# data_dir = "~/Library/Application Support/kiln"
+
+# Built Leptos web app served at /app. Default: <data_dir>/web.
+# (In --dev, <repo>/app/dist is used when <data_dir>/web has no index.html.)
+# web_dir = "~/Library/Application Support/kiln/web"
+
+[server]
+# "tailscale" binds to the Tailscale IPv4 address (`tailscale ip -4`, or the
+# 100.64.0.0/10 address on tailscale0 / utun*). kilnd refuses to start without
+# one unless --dev (then 127.0.0.1). An explicit "ip" or "ip:port" also works.
+# 0.0.0.0 / :: are always refused: Kiln never listens publicly.
+bind = "tailscale"
+port = 7420
+# URL clients use; normally the HTTPS name from `tailscale serve`. Encoded in
+# pairing QR codes and PR artifact links. Default: http://<bound address>.
+# public_url = "https://mac-mini.tailnet-abc.ts.net"
+max_body_kb = 2048            # JSON request body limit
+request_timeout_secs = 30     # API request timeout (WebSocket/downloads exempt)
+auth_rate_per_minute = 20     # login/register/pairing attempts per client IP
+
+[runtime]
+# "docker" = any Docker-compatible API (Docker Desktop, OrbStack, Colima, Podman).
+# "process" = host subprocesses with NO isolation (development/tests only).
+kind = "docker"
+worker_image = "ghcr.io/chhhee10/kiln-worker:0.1.0"
+# Host path of kiln-runner for the process runtime (default: next to kilnd).
+# runner_bin = "/usr/local/bin/kiln-runner"
+# docker_socket = "/Users/kiln/.orbstack/run/docker.sock"
+
+[capacity]
+ram_mb = 0            # 0 = detect host RAM
+reserve_mb = 6144     # kept free for macOS + kilnd
+max_containers = 8    # ≈ 8 on a 32 GB Mac mini
+max_tasks = 4         # tasks in flight across all users
+
+[timeouts]            # minutes per run
+planner = 15
+builder = 60
+qa = 45
+reviewer = 20
+distiller = 10
+
+[github]
+# "app"   = GitHub App (recommended; least-privilege installation tokens)
+# "token" = personal access token from $<token_env>, else `gh auth token`
+# "local" = no GitHub; PRs are recorded locally (dev / tests / air-gapped)
+mode = "local"        # default is "app"; set app_id + private_key_path for it
+# app_id = 123456
+# private_key_path = "~/.config/kiln/github-app.pem"
+token_env = "GITHUB_TOKEN"
+use_gh_cli = true
+# api_base = "https://github.example.com/api/v3"
+
+# Harness catalog. Built-ins: claude_sdk, codex, opencode (experimental) and
+# mock (only with --dev). The model lists are editable seed defaults from the
+# design mocks; any string is accepted, so new models need no release.
+[harnesses.claude_sdk]
+label = "Claude Agent SDK"
+models = ["claude-sonnet-4.5", "claude-opus-4.1"]
+
+[harnesses.codex]
+label = "Codex"
+models = ["gpt-5", "gpt-5-codex", "qwen3-coder"]
+# options = { "codex.reasoning_effort" = "medium" }   # → RunConfig.options
+
+[harnesses.opencode]
+label = "OpenCode"
+experimental = true
+models = ["qwen3-coder", "gpt-5", "claude-sonnet-4.5"]
+# enabled = false     # hide a harness
+
+# [harnesses.mock]    # dev only; deterministic, no model calls
+# options = { "mock.sleep_ms" = "50" }
+
+# Default worker per role ("harness:model") for users who haven't picked one
+# in Settings → Worker defaults.
+[defaults]
+planner = "claude_sdk:claude-opus-4.1"
+builder = "claude_sdk:claude-sonnet-4.5"
+qa = "codex:gpt-5"
+reviewer = "claude_sdk:claude-opus-4.1"
+distiller = "claude_sdk:claude-sonnet-4.5"
+
+[memory]
+llm_distill = true    # run the Distiller with the run owner's credentials
+retention_days = 75   # raw L0 event retention
+# Advanced tunables (kiln_memory::MemoryConfig), all optional:
+# embedder = { kind = "hash" }               # or { kind = "fastembed", model = "BAAI/bge-small-en-v1.5" }
+# reranker = { kind = "lexical" }
+# vector_backend = "sqlite"                  # or "lance" (feature `lance`)
+# pack_token_budget = 1500
+# default_search_limit = 8
+
+[push]
+# Self-hosted ntfy server for UnifiedPush on Android (optional).
+# ntfy_url = "https://ntfy.mac-mini.tailnet-abc.ts.net"
+
+[vault]
+keychain = true       # master key in the OS keychain; else <data_dir>/master.key (0600)
+
+[log]
+level = "info"        # tracing filter, e.g. "kiln_daemon=debug,info"
+format = "pretty"     # or "json"

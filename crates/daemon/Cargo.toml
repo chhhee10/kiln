@@ -1,8 +1,63 @@
 [package]
 name = "kiln-daemon"
+description = "kilnd: the Kiln host daemon (config, wiring, HTTP/WS API, static web app, service install)."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[lib]
+name = "kiln_daemon"
+path = "src/lib.rs"
+
+[[bin]]
+name = "kilnd"
+path = "src/main.rs"
+
 [dependencies]
 kiln-types.workspace = true
+kiln-store.workspace = true
+kiln-auth.workspace = true
+kiln-vault.workspace = true
+kiln-events.workspace = true
+kiln-notifier.workspace = true
+kiln-memory.workspace = true
+kiln-gitops.workspace = true
+kiln-sandbox.workspace = true
+kiln-harness.workspace = true
+kiln-scheduler.workspace = true
+
+anyhow.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+tokio.workspace = true
+futures.workspace = true
+clap.workspace = true
+axum.workspace = true
+tower.workspace = true
+tower-http = { workspace = true, features = ["fs", "trace", "limit", "timeout", "set-header"] }
+toml = "1.1.8"
+qrcode = { version = "0.14.1", default-features = false, features = ["svg"] }
+if-addrs = "0.15"
+libc = "0.2.191"
+mime_guess = "2.0.5"
+tokio-util = { version = "0.7.18", features = ["io"] }
+hostname = "0.4.2"
+bollard = "0.21.1"
+rand.workspace = true
+
+[dev-dependencies]
+kiln-api-client.workspace = true
+# The `kiln-runner-dev` example wraps the runner library for the tests.
+kiln-runner.workspace = true
+tempfile.workspace = true
+serde_norway = "0.9.42"
+tokio = { workspace = true, features = ["full", "test-util"] }
+
+[[example]]
+name = "kiln-runner-dev"
+path = "examples/kiln-runner-dev.rs"
