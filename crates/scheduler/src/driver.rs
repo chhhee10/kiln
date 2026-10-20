@@ -555,11 +555,21 @@ impl Scheduler {
             .unwrap_or("")
             .trim_end_matches('/')
             .to_string();
+        // Evidence from the attempt being shipped only: earlier attempts and
+        // failed or retried runs would repeat or contradict it.
+        let runs = self.store.list_runs_for_task(task.id).await?;
+        let latest = runs.iter().map(|r| r.attempt).max().unwrap_or(0);
+        let shipped: std::collections::HashSet<_> = runs
+            .iter()
+            .filter(|r| r.attempt == latest && r.state == RunState::Succeeded)
+            .map(|r| r.id)
+            .collect();
         let links: Vec<ArtifactLink> =
             self.store
                 .list_artifacts_for_task(task.id)
                 .await?
                 .into_iter()
+                .filter(|a| shipped.contains(&a.run_id))
                 .map(|a| ArtifactLink {
                     key: a.path.strip_prefix("out/").unwrap_or(&a.path).to_string(),
                     label: a.caption.clone().unwrap_or_else(|| {

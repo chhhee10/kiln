@@ -228,6 +228,35 @@ async fn qa_fails_twice_then_passes() {
         cfg.prompt
     );
     assert!(cfg.prompt.contains("Attempt **2 of 3**"));
+    // The PR links evidence from the shipped attempt only, not the failed ones.
+    let shipped: Vec<String> = runs
+        .iter()
+        .filter(|r| r.attempt == 3 && r.state == RunState::Succeeded)
+        .map(|r| r.id.to_string())
+        .collect();
+    let stale: Vec<String> = runs
+        .iter()
+        .filter(|r| r.attempt < 3)
+        .map(|r| r.id.to_string())
+        .collect();
+    let body = env.prs.list().await.unwrap()[0].body.clone();
+    let linked: Vec<_> = env
+        .store
+        .list_artifacts_for_task(t.id)
+        .await
+        .unwrap()
+        .into_iter()
+        .filter(|a| body.contains(&a.id.to_string()))
+        .collect();
+    assert!(!linked.is_empty(), "{body}");
+    for a in &linked {
+        assert!(
+            shipped.contains(&a.run_id.to_string()),
+            "stale artifact {} in PR",
+            a.path
+        );
+        assert!(!stale.contains(&a.run_id.to_string()));
+    }
     env.sched.shutdown().await;
 }
 
