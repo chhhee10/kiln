@@ -222,3 +222,51 @@ async fn postgres_sidecar_becomes_healthy() {
     rt.stop(&id, Duration::from_secs(2)).await.unwrap();
     rt.remove(&id).await.unwrap();
 }
+
+/// The shipped extras template on top of the real worker image. Needs
+/// `KILN_TEST_WORKER_IMAGE` (e.g. `kiln/worker:dev`) and network for apt.
+#[tokio::test]
+async fn extras_template_builds_on_the_worker_image() {
+    let Ok(base) = std::env::var("KILN_TEST_WORKER_IMAGE") else {
+        eprintln!("skipping: set KILN_TEST_WORKER_IMAGE to build the extras template");
+        return;
+    };
+    if !enabled() {
+        return;
+    }
+    let rt = DockerRuntime::connect().await.expect("docker");
+    let extras = kiln_types::qa::QaExtras {
+        apt: vec!["sqlite3".into()],
+        pip: vec!["six".into()],
+        ..Default::default()
+    };
+    let base_id = rt
+        .image_id(&base)
+        .await
+        .unwrap()
+        .expect("worker image present");
+    let tag = extras_tag("TEST", &base_id, &extras);
+    let df = render_extras(EXTRAS_TEMPLATE, &extras);
+    rt.build_image(&tag, &df, &[("BASE_IMAGE".into(), base.clone())])
+        .await
+        .unwrap();
+    let mut spec = ContainerSpec::new(unique("kiln-extras-real"), &tag);
+    spec.cmd = vec![
+        "sh".into(),
+        "-c".into(),
+        "id -un; sqlite3 --version; python3 -c 'import six; print(six.__name__)'; command -v kiln-runner".into(),
+    ];
+    let c = rt.create(&spec).await.unwrap();
+    rt.start(&c).await.unwrap();
+    let code = rt.wait(&c).await.unwrap();
+    let logs = rt.logs_tail(&c, 20).await.unwrap();
+    rt.remove(&c).await.unwrap();
+    assert_eq!(code, 0, "{logs}");
+    assert!(logs.contains("kiln"), "{logs}");
+    assert!(logs.contains("six"), "{logs}");
+    assert!(logs.contains("/usr/local/bin/kiln-runner"), "{logs}");
+    std::process::Command::new("docker")
+        .args(["rmi", "-f", &tag])
+        .output()
+        .ok();
+}
