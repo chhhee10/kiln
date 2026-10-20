@@ -59,12 +59,20 @@ systemd unit), `kilnd admin reset-password <email>`.
 
 ## Status
 
-Built end-to-end and tested with mock agents (no model credits spent),
-including the full pipeline in real Docker containers with a Postgres QA
-service. Not yet verified: real Claude/Codex sessions, the Tauri shell builds (needs
-WebKitGTK / Android SDK), native Android push & speech, GitHub App against real GitHub.
-The `full` memory features (LanceDB, fastembed, DataFusion) are built and
-tested (`PROTOC=... KILN_TEST_FASTEMBED=1 cargo test -p kiln-memory --features full`).
+Verified on real infrastructure:
+
+- **Real agents end to end.** Codex (`gpt-6.1-sol`) and the Claude Agent SDK
+  (`claude-haiku-4-5`), both through a LiteLLM gateway, planned, built,
+  tested and reviewed tasks in Docker and opened real GitHub pull requests
+  (token mode).
+- **Containers.** Full pipeline in Docker, including Postgres QA services
+  with health checks and per-project extras images.
+- **Desktop app.** Tauri build packaged as AppImage, `.deb` and `.rpm`.
+- **Memory backends.** The `full` features (LanceDB, fastembed, DataFusion)
+  pass their tests (`PROTOC=... KILN_TEST_FASTEMBED=1 cargo test -p kiln-memory --features full`).
+
+Not yet verified: the GitHub App mode against real GitHub, and native Android
+push and speech on a device.
 
 In `--dev`, the daemon falls back to the process runtime (no isolation) when
 Docker or the worker image is missing.
