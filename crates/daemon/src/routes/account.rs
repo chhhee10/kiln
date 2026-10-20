@@ -152,7 +152,25 @@ pub async fn register_push(
             name: req.device_name.clone(),
         })
         .await?;
-    st.store.set_push_endpoint(device.id, Some(ep)).await?;
+    let keys = match (req.p256dh.as_deref(), req.auth.as_deref()) {
+        (Some(p256dh), Some(auth)) => {
+            let k = kiln_notifier::SubscriptionKeys {
+                p256dh: p256dh.trim().into(),
+                auth: auth.trim().into(),
+            };
+            kiln_notifier::validate_keys(&k).map_err(|e| AppError::invalid(e.to_string()))?;
+            Some(k)
+        }
+        (None, None) => None,
+        _ => return Err(AppError::invalid("send both p256dh and auth, or neither")),
+    };
+    st.store
+        .set_push_subscription(
+            device.id,
+            Some(ep),
+            keys.as_ref().map(|k| (k.p256dh.as_str(), k.auth.as_str())),
+        )
+        .await?;
     Ok(Json(st.store.get_device(device.id).await?))
 }
 

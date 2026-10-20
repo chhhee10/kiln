@@ -431,6 +431,9 @@ pub struct Device {
     pub name: String,
     /// UnifiedPush endpoint URL (Android).
     pub push_endpoint: Option<String>,
+    /// Pushes to this device are Web Push encrypted (keys registered).
+    #[serde(default)]
+    pub push_encrypted: bool,
     pub last_seen: Timestamp,
 }
 

@@ -15,6 +15,8 @@ object KilnStore {
     private const val TOKEN = "token"
     private const val DEVICE = "device_name"
     private const val ENDPOINT = "endpoint"
+    private const val P256DH = "p256dh"
+    private const val AUTH = "auth"
 
     private fun prefs(ctx: Context): SharedPreferences =
         ctx.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -32,8 +34,22 @@ object KilnStore {
             .apply()
     }
 
-    fun saveEndpoint(ctx: Context, endpoint: String?) {
-        prefs(ctx).edit().putString(ENDPOINT, endpoint).apply()
+    /** Web Push keys `(p256dh, auth)` registered with the stored endpoint. */
+    fun pushKeys(ctx: Context): Pair<String, String>? {
+        val p = prefs(ctx)
+        val pub = p.getString(P256DH, null) ?: return null
+        val auth = p.getString(AUTH, null) ?: return null
+        return pub to auth
+    }
+
+    /** Keys always travel with their endpoint: clearing one clears both. */
+    fun saveEndpoint(ctx: Context, endpoint: String?, p256dh: String? = null, auth: String? = null) {
+        val keep = endpoint != null && p256dh != null && auth != null
+        prefs(ctx).edit()
+            .putString(ENDPOINT, endpoint)
+            .putString(P256DH, if (keep) p256dh else null)
+            .putString(AUTH, if (keep) auth else null)
+            .apply()
     }
 
     fun clear(ctx: Context) {

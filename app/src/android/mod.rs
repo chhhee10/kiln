@@ -689,9 +689,11 @@ fn install_shell_bridges(ui: Ui, kind: Memo<AuthKind>) {
         else {
             return;
         };
+        let key = |k: &str| v.get(k).and_then(|e| e.as_str()).map(str::to_string);
+        let keys = key("p256dh").zip(key("auth"));
         let push = ui.push;
         let shown = ep.clone();
-        app.register_push(ep, "Kiln Android".into(), move |ok| {
+        app.register_push(ep, "Kiln Android".into(), keys, move |ok| {
             push.set(if ok {
                 PushState::Registered(shown.clone())
             } else {

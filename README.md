@@ -65,8 +65,8 @@ service. Not yet verified: real Claude/Codex sessions, the Tauri shell builds (n
 WebKitGTK / Android SDK), native Android push & speech, LanceDB/fastembed at
 runtime, GitHub App against real GitHub.
 
-Known gaps: encrypted push payloads. In `--dev`, the daemon falls back to the
-process runtime (no isolation) when Docker or the worker image is missing.
+In `--dev`, the daemon falls back to the process runtime (no isolation) when
+Docker or the worker image is missing.
 
 ## License
 

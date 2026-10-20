@@ -18,6 +18,15 @@ pub struct NewDevice {
     pub name: String,
 }
 
+/// One device to push to (see [`Store::list_push_targets`]).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PushTarget {
+    pub device: DeviceId,
+    pub endpoint: String,
+    /// `(p256dh, auth)`, base64url.
+    pub keys: Option<(String, String)>,
+}
+
 fn device_from_row(r: &SqliteRow) -> Result<Device> {
     Ok(Device {
         id: r.id("id")?,
@@ -25,6 +34,7 @@ fn device_from_row(r: &SqliteRow) -> Result<Device> {
         kind: r.enumv("kind")?,
         name: r.str("name")?,
         push_endpoint: r.opt_str("push_endpoint")?,
+        push_encrypted: r.opt_str("push_p256dh")?.is_some() && r.opt_str("push_auth")?.is_some(),
         last_seen: r.time("last_seen_at")?,
     })
 }
@@ -215,18 +225,60 @@ impl Store {
         rows.iter().map(device_from_row).collect()
     }
 
-    /// Set (or clear) a device's UnifiedPush endpoint.
+    /// Set (or clear) a device's UnifiedPush endpoint, without Web Push keys.
     pub async fn set_push_endpoint(&self, device: DeviceId, endpoint: Option<&str>) -> Result<()> {
-        let r = sqlx::query("UPDATE devices SET push_endpoint = ?, last_seen_at = ? WHERE id = ?")
-            .bind(endpoint)
-            .bind(now())
-            .bind(device.to_string())
-            .execute(&self.pool)
-            .await?;
+        self.set_push_subscription(device, endpoint, None).await
+    }
+
+    /// Set (or clear) a device's endpoint with its Web Push keys
+    /// `(p256dh, auth)`. Keys always travel with their endpoint.
+    pub async fn set_push_subscription(
+        &self,
+        device: DeviceId,
+        endpoint: Option<&str>,
+        keys: Option<(&str, &str)>,
+    ) -> Result<()> {
+        let keys = endpoint.and(keys);
+        let r = sqlx::query(
+            "UPDATE devices SET push_endpoint = ?, push_p256dh = ?, push_auth = ?, last_seen_at = ?
+             WHERE id = ?",
+        )
+        .bind(endpoint)
+        .bind(keys.map(|k| k.0))
+        .bind(keys.map(|k| k.1))
+        .bind(now())
+        .bind(device.to_string())
+        .execute(&self.pool)
+        .await?;
         if r.rows_affected() == 0 {
             return Err(StoreError::NotFound);
         }
         Ok(())
+    }
+
+    /// Where to push for `user`: every device with an endpoint, plus its
+    /// Web Push keys `(p256dh, auth)` when registered.
+    pub async fn list_push_targets(&self, user: UserId) -> Result<Vec<PushTarget>> {
+        let rows = sqlx::query(
+            "SELECT id, push_endpoint, push_p256dh, push_auth FROM devices
+             WHERE user_id = ? AND push_endpoint IS NOT NULL",
+        )
+        .bind(user.to_string())
+        .fetch_all(&self.pool)
+        .await?;
+        rows.iter()
+            .map(|r| {
+                let keys = match (r.opt_str("push_p256dh")?, r.opt_str("push_auth")?) {
+                    (Some(p), Some(a)) => Some((p, a)),
+                    _ => None,
+                };
+                Ok(PushTarget {
+                    device: r.id("id")?,
+                    endpoint: r.str("push_endpoint")?,
+                    keys,
+                })
+            })
+            .collect()
     }
 
     /// Remove a device owned by `user` (and its sessions).

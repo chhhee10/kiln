@@ -38,7 +38,7 @@ pub use projects::NewProject;
 pub use pull_requests::{NewPr, PullRequest, PullRequestState};
 pub use run_events::LogTarget;
 pub use runs::NewRun;
-pub use sessions::NewDevice;
+pub use sessions::{NewDevice, PushTarget};
 pub use settings::keys as setting_keys;
 pub use tasks::{NewTask, TaskFilter, TaskTransition};
 pub use users::{NewUser, UserPatch};

@@ -90,8 +90,13 @@ class KilnMobilePlugin(private val activity: Activity) : Plugin(activity) {
         trigger("notificationTap", JSObject().put("link", link))
     }
 
-    fun emitEndpoint(endpoint: String) {
-        activity.runOnUiThread { trigger("pushEndpoint", JSObject().put("endpoint", endpoint)) }
+    fun emitEndpoint(endpoint: String, p256dh: String?, auth: String?) {
+        val o = JSObject().put("endpoint", endpoint)
+        if (p256dh != null && auth != null) {
+            o.put("p256dh", p256dh)
+            o.put("auth", auth)
+        }
+        activity.runOnUiThread { trigger("pushEndpoint", o) }
     }
 
     fun emitPushFailed(reason: String) {
@@ -138,7 +143,8 @@ class KilnMobilePlugin(private val activity: Activity) : Plugin(activity) {
                 val o = JSObject()
                 if (known != null) {
                     o.put("status", "registered").put("endpoint", known)
-                    emitEndpoint(known)
+                    val keys = KilnStore.pushKeys(activity)
+                    emitEndpoint(known, keys?.first, keys?.second)
                 } else {
                     o.put("status", "registering")
                 }

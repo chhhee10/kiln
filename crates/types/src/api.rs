@@ -159,6 +159,12 @@ pub struct PairCompleteRequest {
 pub struct RegisterPushRequest {
     pub endpoint: String,
     pub device_name: String,
+    /// Web Push keys from the UnifiedPush connector (base64url). With both
+    /// set, payloads are encrypted end to end (RFC 8291).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub p256dh: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auth: Option<String>,
 }
 
 // ---------------------------------------------------------------- board & tasks

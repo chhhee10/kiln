@@ -10,27 +10,32 @@ import org.unifiedpush.android.connector.data.PushMessage
 /**
  * UnifiedPush events from the distributor (e.g. ntfy).
  *
- * The daemon POSTs plain JSON (`PushPayload`) to the endpoint; the
- * connector hands it over undecrypted (`message.decrypted == false`), which
- * is fine because the endpoint is only reachable by the daemon's notifier
- * and the content carries no secrets. (Web Push encryption with
- * `endpoint.pubKeySet` is a follow-up on the daemon side.)
+ * The connector generates a Web Push key pair per registration
+ * (`endpoint.pubKeySet`); we hand the public half to the daemon, which then
+ * encrypts every `PushPayload` to it (RFC 8291), so the distributor only
+ * relays ciphertext. The connector decrypts before `onMessage`.
  */
 class KilnPushService : PushService() {
     override fun onNewEndpoint(endpoint: PushEndpoint, instance: String) {
-        KilnStore.saveEndpoint(this, endpoint.url)
+        val keys = endpoint.pubKeySet
+        KilnStore.saveEndpoint(this, endpoint.url, keys?.pubKey, keys?.auth)
         val plugin = KilnMobilePlugin.instance
         if (plugin != null) {
             // The WebView registers it through the shared API layer.
-            plugin.emitEndpoint(endpoint.url)
+            plugin.emitEndpoint(endpoint.url, keys?.pubKey, keys?.auth)
         } else {
-            DaemonClient.registerPush(this, endpoint.url) { r ->
+            DaemonClient.registerPush(this, endpoint.url, keys?.pubKey, keys?.auth) { r ->
                 if (!r.ok) Log.w(TAG, "push endpoint registration failed: ${r.error}")
             }
         }
     }
 
     override fun onMessage(message: PushMessage, instance: String) {
+        if (!message.decrypted) {
+            // Encrypted for an older key pair (or tampered with): drop it.
+            Log.w(TAG, "ignoring a push the connector could not decrypt")
+            return
+        }
         val text = try {
             String(message.content, Charsets.UTF_8)
         } catch (_: Exception) {

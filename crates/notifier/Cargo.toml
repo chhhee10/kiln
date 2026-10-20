@@ -17,6 +17,12 @@ serde.workspace = true
 serde_json.workspace = true
 futures.workspace = true
 tokio = { workspace = true, features = ["sync", "time"] }
+# Web Push message encryption (RFC 8291, aes128gcm).
+p256 = { version = "0.13.2", default-features = false, features = ["ecdh", "std"] }
+aes-gcm = { version = "0.10.3", features = ["getrandom"] }
+hkdf = "0.12.4"
+sha2-10 = { package = "sha2", version = "0.10.9" }
+base64 = "0.23.1"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "net", "io-util"] }

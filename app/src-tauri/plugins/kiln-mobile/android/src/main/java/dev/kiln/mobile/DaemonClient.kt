@@ -50,12 +50,22 @@ object DaemonClient {
     }
 
     /** `POST /devices/push` (RegisterPushRequest). Runs off the main thread. */
-    fun registerPush(ctx: Context, endpoint: String, done: ((Result) -> Unit)? = null) {
+    fun registerPush(
+        ctx: Context,
+        endpoint: String,
+        p256dh: String?,
+        auth: String?,
+        done: ((Result) -> Unit)? = null,
+    ) {
         val app = ctx.applicationContext
         io.execute {
-            val r = post(app, "/devices/push", JSONObject()
+            val body = JSONObject()
                 .put("endpoint", endpoint)
-                .put("device_name", KilnStore.deviceName(app)))
+                .put("device_name", KilnStore.deviceName(app))
+            if (p256dh != null && auth != null) {
+                body.put("p256dh", p256dh).put("auth", auth)
+            }
+            val r = post(app, "/devices/push", body)
             done?.invoke(r)
         }
     }

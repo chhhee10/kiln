@@ -186,10 +186,10 @@ mod wasm {
         let socket =
             WebSocket::new(&client.ws_url()).map_err(|e| ClientError::Http(format!("{e:?}")))?;
         let on_message = Closure::<dyn FnMut(MessageEvent)>::new(move |e: MessageEvent| {
-            if let Some(text) = e.data().as_string() {
-                if let Some(ev) = crate::decode_server_event(&text) {
-                    on_event(ev);
-                }
+            if let Some(text) = e.data().as_string()
+                && let Some(ev) = crate::decode_server_event(&text)
+            {
+                on_event(ev);
             }
         });
         let on_close_cb = Closure::<dyn FnMut(CloseEvent)>::new(move |_e: CloseEvent| on_close());

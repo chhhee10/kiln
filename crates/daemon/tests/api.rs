@@ -145,6 +145,8 @@ async fn setup_login_register() {
         .register_push(&RegisterPushRequest {
             endpoint: "https://ntfy.acme.dev/up123".into(),
             device_name: "Pixel".into(),
+            p256dh: None,
+            auth: None,
         })
         .await
         .unwrap();
@@ -152,6 +154,27 @@ async fn setup_login_register() {
         dev.push_endpoint.as_deref(),
         Some("https://ntfy.acme.dev/up123")
     );
+    assert!(!dev.push_encrypted);
+    // With Web Push keys (RFC 8291 Appendix A's subscription), pushes are
+    // encrypted; malformed or half-sent keys are rejected.
+    let keyed = |p256dh: Option<&str>, auth: Option<&str>| RegisterPushRequest {
+        endpoint: "https://ntfy.acme.dev/up123".into(),
+        device_name: "Pixel".into(),
+        p256dh: p256dh.map(Into::into),
+        auth: auth.map(Into::into),
+    };
+    let p256dh =
+        "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
+    let auth = "BTBZMqHH6r4Tts7J_aSIgg";
+    let dev = phone
+        .register_push(&keyed(Some(p256dh), Some(auth)))
+        .await
+        .unwrap();
+    assert!(dev.push_encrypted);
+    for bad in [keyed(Some(p256dh), None), keyed(Some("AAAA"), Some(auth))] {
+        let e = phone.register_push(&bad).await.unwrap_err();
+        assert_eq!(status(&e), 400);
+    }
     let reuse = client(&d)
         .pair_complete(&PairCompleteRequest {
             code: p.code,

@@ -10,14 +10,16 @@
 //! [`Notifier::workers_live`] maintains a single ongoing "workers live" card
 //! per user, throttled to one update every 10 s.
 
+mod webpush;
+pub use webpush::{MAX_PLAINTEXT, SubscriptionKeys, WebPushError, validate_keys};
+
 use async_trait::async_trait;
 use futures::future::join_all;
 use kiln_events::Bus;
 use kiln_store::{NewNotification, Store, StoreError};
 use kiln_types::event::ServerEvent;
 use kiln_types::{
-    DeviceId, Notification, NotificationAction, NotificationChannel, NotificationId,
-    NotificationKind, UserId,
+    Notification, NotificationAction, NotificationChannel, NotificationId, NotificationKind, UserId,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -60,7 +62,29 @@ pub struct PushPayload {
     pub resolved: Option<String>,
 }
 
+/// How long a push relay may hold an undelivered message.
+const PUSH_TTL_SECS: u32 = 24 * 3600;
+
 impl PushPayload {
+    /// JSON no longer than `max` bytes, shortening the body if needed (one
+    /// Web Push record holds ~4 KB).
+    pub fn to_json_within(&self, max: usize) -> Vec<u8> {
+        let mut p = self.clone();
+        loop {
+            let json = serde_json::to_vec(&p).unwrap_or_default();
+            if json.len() <= max || p.body.is_empty() {
+                return json;
+            }
+            let keep = p.body.len().saturating_sub(json.len() - max + 3);
+            let mut cut = keep.min(p.body.len());
+            while !p.body.is_char_boundary(cut) {
+                cut -= 1;
+            }
+            p.body.truncate(cut);
+            p.body.push('…');
+        }
+    }
+
     /// Payload for a stored notification.
     pub fn from_notification(n: &Notification, progress: Option<u8>) -> Self {
         Self {
@@ -94,10 +118,12 @@ pub enum PushError {
 /// Delivers push payloads. A trait so tests can capture pushes.
 #[async_trait]
 pub trait PushSender: Send + Sync {
-    /// POST `payload` as JSON to `endpoint`.
+    /// POST `payload` as JSON to `endpoint`, Web Push encrypted to `keys`
+    /// when the device registered them.
     async fn send(
         &self,
         endpoint: &str,
+        keys: Option<&SubscriptionKeys>,
         payload: &PushPayload,
     ) -> std::result::Result<(), PushError>;
 }
@@ -130,21 +156,28 @@ impl PushSender for HttpPushSender {
     async fn send(
         &self,
         endpoint: &str,
+        keys: Option<&SubscriptionKeys>,
         payload: &PushPayload,
     ) -> std::result::Result<(), PushError> {
-        let resp = self
-            .client
-            .post(endpoint)
-            .json(payload)
-            .send()
-            .await
-            .map_err(|e| {
-                PushError::Transport(if e.is_timeout() {
-                    "timed out".into()
-                } else {
-                    "request failed".into()
-                })
-            })?;
+        let req = self.client.post(endpoint);
+        let req = match keys {
+            Some(keys) => {
+                let body = webpush::encrypt(keys, &payload.to_json_within(MAX_PLAINTEXT))
+                    .map_err(|e| PushError::Transport(e.to_string()))?;
+                req.header("content-encoding", "aes128gcm")
+                    .header("content-type", "application/octet-stream")
+                    .header("ttl", PUSH_TTL_SECS.to_string())
+                    .body(body)
+            }
+            None => req.json(payload),
+        };
+        let resp = req.send().await.map_err(|e| {
+            PushError::Transport(if e.is_timeout() {
+                "timed out".into()
+            } else {
+                "request failed".into()
+            })
+        })?;
         match resp.status().as_u16() {
             200..=299 => Ok(()),
             404 | 410 => Err(PushError::Gone),
@@ -311,33 +344,34 @@ impl Notifier {
         if !self.channel_enabled(n.user_id, n.kind.channel()).await {
             return;
         }
-        let devices = match self.store.list_devices(n.user_id).await {
-            Ok(d) => d,
+        let targets = match self.store.list_push_targets(n.user_id).await {
+            Ok(t) => t,
             Err(e) => {
                 tracing::warn!(user = %n.user_id, error = %e, "could not list devices for push");
                 return;
             }
         };
-        let targets: Vec<(DeviceId, String)> = devices
+        let targets: Vec<_> = targets
             .into_iter()
-            .filter_map(|d| d.push_endpoint.map(|e| (d.id, e)))
-            .filter(|(_, e)| e.starts_with("https://") || e.starts_with("http://"))
+            .filter(|t| t.endpoint.starts_with("https://") || t.endpoint.starts_with("http://"))
             .collect();
         if targets.is_empty() {
             return;
         }
         let payload = PushPayload::from_notification(n, progress);
-        let sends = targets.iter().map(|(id, endpoint)| {
+        let sends = targets.iter().map(|t| {
             let payload = &payload;
+            let keys = t.keys.as_ref().map(|(p256dh, auth)| SubscriptionKeys {
+                p256dh: p256dh.clone(),
+                auth: auth.clone(),
+            });
             async move {
-                let res =
-                    match tokio::time::timeout(PUSH_TIMEOUT * 2, self.http.send(endpoint, payload))
-                        .await
-                    {
-                        Ok(r) => r,
-                        Err(_) => Err(PushError::Transport("timed out".into())),
-                    };
-                (*id, res)
+                let send = self.http.send(&t.endpoint, keys.as_ref(), payload);
+                let res = match tokio::time::timeout(PUSH_TIMEOUT * 2, send).await {
+                    Ok(r) => r,
+                    Err(_) => Err(PushError::Transport("timed out".into())),
+                };
+                (t.device, res)
             }
         });
         for (device, res) in join_all(sends).await {
@@ -352,5 +386,38 @@ impl Notifier {
                 Err(e) => tracing::warn!(device = %device, error = %e, "push delivery failed"),
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn json_is_shortened_to_fit_one_record() {
+        let n = PushPayload {
+            id: NotificationId::new(),
+            kind: NotificationKind::TaskFailed,
+            channel: NotificationChannel::Decisions,
+            title: "QA failed".into(),
+            body: "é".repeat(5000),
+            deep_link: "task/FP-1".into(),
+            actions: vec![],
+            progress: None,
+            resolved: None,
+        };
+        let json = n.to_json_within(MAX_PLAINTEXT);
+        assert!(json.len() <= MAX_PLAINTEXT, "{}", json.len());
+        let back: PushPayload = serde_json::from_slice(&json).unwrap();
+        assert!(back.body.ends_with('…'));
+        assert_eq!(back.title, "QA failed");
+        let small = PushPayload {
+            body: "ok".into(),
+            ..n
+        };
+        assert_eq!(
+            small.to_json_within(MAX_PLAINTEXT),
+            serde_json::to_vec(&small).unwrap()
+        );
     }
 }

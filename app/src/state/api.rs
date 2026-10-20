@@ -951,13 +951,16 @@ impl AppState {
         });
     }
 
-    /// Register this device's UnifiedPush endpoint with the daemon.
+    /// Register this device's UnifiedPush endpoint (and its Web Push keys,
+    /// when the connector provides them) with the daemon.
     pub fn register_push(
         &self,
         endpoint: String,
         device_name: String,
+        keys: Option<(String, String)>,
         done: impl Fn(bool) + 'static,
     ) {
+        let (p256dh, auth) = keys.unzip();
         if self.is_demo() {
             done(true);
             return;
@@ -972,6 +975,8 @@ impl AppState {
                 .register_push(&RegisterPushRequest {
                     endpoint,
                     device_name,
+                    p256dh,
+                    auth,
                 })
                 .await
             {

@@ -15,6 +15,7 @@ use std::time::Duration;
 #[derive(Default)]
 struct FakeSender {
     pushes: Mutex<Vec<(String, PushPayload)>>,
+    encrypted: Mutex<Vec<String>>,
 }
 
 impl FakeSender {
@@ -25,7 +26,15 @@ impl FakeSender {
 
 #[async_trait]
 impl PushSender for FakeSender {
-    async fn send(&self, endpoint: &str, payload: &PushPayload) -> Result<(), PushError> {
+    async fn send(
+        &self,
+        endpoint: &str,
+        keys: Option<&SubscriptionKeys>,
+        payload: &PushPayload,
+    ) -> Result<(), PushError> {
+        if keys.is_some() {
+            self.encrypted.lock().unwrap().push(endpoint.to_string());
+        }
         self.pushes
             .lock()
             .unwrap()
@@ -461,7 +470,7 @@ async fn http_sender_posts_json_and_maps_status() {
     let sender = HttpPushSender::new();
 
     let (url, h) = serve_once("200 OK").await;
-    sender.send(&url, &payload).await.unwrap();
+    sender.send(&url, None, &payload).await.unwrap();
     let req = h.await.unwrap();
     assert!(req.starts_with("POST /up/abc"), "{req}");
     assert!(
@@ -472,15 +481,79 @@ async fn http_sender_posts_json_and_maps_status() {
 
     let (url, h) = serve_once("410 Gone").await;
     assert!(matches!(
-        sender.send(&url, &payload).await,
+        sender.send(&url, None, &payload).await,
         Err(PushError::Gone)
     ));
     h.await.unwrap();
 
     let (url, h) = serve_once("503 Service Unavailable").await;
     assert!(matches!(
-        sender.send(&url, &payload).await,
+        sender.send(&url, None, &payload).await,
         Err(PushError::Status(503))
     ));
     h.await.unwrap();
+}
+
+/// RFC 8291 Appendix A's user-agent keys: a valid subscription.
+fn rfc_keys() -> SubscriptionKeys {
+    SubscriptionKeys {
+        p256dh: "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4".into(),
+        auth: "BTBZMqHH6r4Tts7J_aSIgg".into(),
+    }
+}
+
+#[tokio::test]
+async fn http_sender_encrypts_when_keys_are_registered() {
+    let payload = PushPayload {
+        id: kiln_types::NotificationId::new(),
+        kind: NotificationKind::TaskReady,
+        channel: NotificationChannel::ReadyForReview,
+        title: "Ready".into(),
+        body: "secret-looking body".into(),
+        deep_link: "task/FP-1".into(),
+        actions: vec![],
+        progress: None,
+        resolved: None,
+    };
+    let (url, h) = serve_once("201 Created").await;
+    HttpPushSender::new()
+        .send(&url, Some(&rfc_keys()), &payload)
+        .await
+        .unwrap();
+    let req = h.await.unwrap();
+    let lower = req.to_ascii_lowercase();
+    assert!(lower.contains("content-encoding: aes128gcm"), "{req}");
+    assert!(lower.contains("ttl: 86400"), "{req}");
+    assert!(
+        !req.contains("secret-looking body"),
+        "plaintext leaked: {req}"
+    );
+    assert!(!req.contains("task/FP-1"), "plaintext leaked: {req}");
+}
+
+#[tokio::test]
+async fn devices_with_keys_get_encrypted_pushes() {
+    let e = env().await;
+    let plain = device(&e, "Old phone", Some("https://ntfy.example.com/up-plain")).await;
+    let enc = device(&e, "Pixel", None).await;
+    let k = rfc_keys();
+    e.store
+        .set_push_subscription(
+            enc.id,
+            Some("https://ntfy.example.com/up-enc"),
+            Some((&k.p256dh, &k.auth)),
+        )
+        .await
+        .unwrap();
+    assert!(e.store.get_device(enc.id).await.unwrap().push_encrypted);
+    assert!(!e.store.get_device(plain.id).await.unwrap().push_encrypted);
+    e.notifier.notify(failed(&e.user)).await.unwrap();
+    assert_eq!(e.sender.pushes().len(), 2);
+    assert_eq!(
+        *e.sender.encrypted.lock().unwrap(),
+        vec!["https://ntfy.example.com/up-enc".to_string()]
+    );
+    // Clearing the endpoint drops the keys with it.
+    e.store.set_push_endpoint(enc.id, None).await.unwrap();
+    assert!(!e.store.get_device(enc.id).await.unwrap().push_encrypted);
 }
