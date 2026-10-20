@@ -45,7 +45,9 @@ if (typeof cfg.prompt !== 'string' || !cfg.prompt.trim()) fail('config has no pr
 const env = { ...process.env };
 if (!env.ANTHROPIC_API_KEY && !env.CLAUDE_CODE_OAUTH_TOKEN && env.LITELLM_BASE_URL) {
   // Route through the user's LiteLLM gateway (Anthropic-compatible endpoint).
-  env.ANTHROPIC_BASE_URL = env.LITELLM_BASE_URL.replace(/\/+$/, '');
+  // The SDK appends `/v1/messages` itself, so drop a trailing `/v1` (LiteLLM
+  // URLs are usually given in their OpenAI form, `https://host/v1`).
+  env.ANTHROPIC_BASE_URL = env.LITELLM_BASE_URL.replace(/\/+$/, '').replace(/\/v1$/, '');
   if (env.LITELLM_API_KEY) env.ANTHROPIC_AUTH_TOKEN = env.LITELLM_API_KEY;
   log('INFO', 'using LiteLLM gateway for Claude');
 }
