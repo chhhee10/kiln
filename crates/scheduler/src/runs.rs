@@ -16,8 +16,8 @@ use crate::util::meta;
 use kiln_events::Event;
 use kiln_gitops::Worktree;
 use kiln_sandbox::{
-    ContainerSpec, LABEL_OWNER, LABEL_ROLE, LABEL_RUN_ID, LABEL_TASK, NetworkMode, mounts_for,
-    prepare_run_dir,
+    ContainerSpec, LABEL_OWNER, LABEL_ROLE, LABEL_RUN_ID, LABEL_TASK, NetworkMode, SERVICE_CAPS,
+    mounts_for, prepare_run_dir,
 };
 use kiln_types::protocol::{RunConfig, RunOutcome, paths};
 use kiln_types::qa::QaService;
@@ -279,6 +279,7 @@ impl Scheduler {
                     .collect();
                 s.network = NetworkMode::Named(net.clone());
                 s.aliases = vec![name.clone()];
+                s.cap_add = SERVICE_CAPS.iter().map(|c| c.to_string()).collect();
                 s.labels.insert(LABEL_RUN_ID.into(), run.id.to_string());
                 s.labels.insert(LABEL_ROLE.into(), "service".into());
                 s.labels.insert(LABEL_OWNER.into(), spec.owner.to_string());
@@ -470,7 +471,27 @@ impl Scheduler {
         }
         let delivered = outcome_rx.borrow().clone();
         let stop = lock(&live.stop_reason).clone();
-        let (state, outcome) = self.classify_end(live.run_id, delivered, exited, stop);
+        let silent = delivered.is_none() && stop.is_none();
+        let (state, mut outcome) = self.classify_end(live.run_id, delivered, exited, stop);
+        if silent
+            && state == RunState::Failed
+            && outcome
+                .error
+                .as_deref()
+                .is_some_and(|e| e.starts_with("runner exited"))
+        {
+            // No outcome at all: the runner likely never started. The
+            // container is removed after ingest, so keep its last words.
+            if let Ok(tail) = self.runtime.logs_tail(&cid, 20).await
+                && !tail.trim().is_empty()
+            {
+                let tail = live.redactor.scrub(&tail);
+                if let Some(e) = outcome.error.as_mut() {
+                    e.push_str(":\n");
+                    e.push_str(tail.trim_end());
+                }
+            }
+        }
         self.finalize(live.run_id, Some(live), state, outcome).await;
     }
 

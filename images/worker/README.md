@@ -5,7 +5,7 @@ Distiller); per-project extras are layered on top (DECISIONS.md #2).
 
 | Path in image                  | What                                                             |
 |--------------------------------|------------------------------------------------------------------|
-| `/usr/local/bin/kiln-runner`   | the runner (`ENTRYPOINT kiln-runner run`); also `mcp`, `mock-harness` |
+| `/usr/local/bin/kiln-runner`   | the runner (`CMD kiln-runner run`); also `mcp`, `mock-harness` |
 | `/opt/kiln/claude-entry.mjs`   | Claude Agent SDK entry (harness `claude_sdk`), SDK in `/opt/kiln/node_modules` |
 | `codex` (global npm)           | OpenAI Codex CLI (harness `codex`)                               |
 | `playwright` + Chromium        | browsers in `/ms-playwright` (`PLAYWRIGHT_BROWSERS_PATH`)        |

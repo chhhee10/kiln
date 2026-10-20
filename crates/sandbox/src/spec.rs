@@ -92,7 +92,15 @@ pub struct ContainerSpec {
     /// Pids limit; `None` = [`DEFAULT_PIDS_LIMIT`].
     #[serde(default)]
     pub pids_limit: Option<i64>,
+    /// Capabilities added back after dropping ALL. Empty for workers;
+    /// sidecars use [`SERVICE_CAPS`].
+    #[serde(default)]
+    pub cap_add: Vec<String>,
 }
+
+/// What stock service images (postgres, redis, mysql…) need to drop root
+/// in their entrypoint: chown their data dir and switch to their own user.
+pub const SERVICE_CAPS: &[&str] = &["CHOWN", "SETUID", "SETGID", "DAC_OVERRIDE", "FOWNER"];
 
 impl ContainerSpec {
     pub fn new(name: impl Into<String>, image: impl Into<String>) -> Self {
@@ -110,6 +118,7 @@ impl ContainerSpec {
             user: None,
             aliases: Vec::new(),
             pids_limit: None,
+            cap_add: Vec::new(),
         }
     }
 

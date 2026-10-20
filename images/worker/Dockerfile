@@ -78,4 +78,6 @@ RUN userdel -r node 2>/dev/null || true \
 
 USER kiln
 WORKDIR /workspace
-ENTRYPOINT ["kiln-runner", "run"]
+# CMD, not ENTRYPOINT: the daemon passes its own command (`kiln-runner run`).
+ENTRYPOINT []
+CMD ["kiln-runner", "run"]

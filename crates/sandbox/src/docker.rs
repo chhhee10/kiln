@@ -156,6 +156,7 @@ impl DockerRuntime {
             pids_limit: Some(spec.pids_limit.unwrap_or(DEFAULT_PIDS_LIMIT)),
             security_opt: Some(vec!["no-new-privileges:true".into()]),
             cap_drop: Some(vec!["ALL".into()]),
+            cap_add: (!spec.cap_add.is_empty()).then(|| spec.cap_add.clone()),
             network_mode: Some(spec.network.as_docker()),
             // The daemon removes the container after the run is ingested.
             auto_remove: Some(false),

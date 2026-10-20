@@ -189,3 +189,36 @@ async fn builds_an_extras_image_on_top_of_a_base() {
         .output()
         .ok();
 }
+
+/// A stock service image starts under the sidecar capability set and its
+/// healthcheck passes through `exec`.
+#[tokio::test]
+async fn postgres_sidecar_becomes_healthy() {
+    if !enabled() {
+        return;
+    }
+    let rt = DockerRuntime::connect().await.expect("docker");
+    rt.ensure_image("postgres:16-alpine").await.unwrap();
+    let mut spec = ContainerSpec::new(unique("kiln-svc"), "postgres:16-alpine");
+    spec.env.push(("POSTGRES_PASSWORD".into(), "kiln".into()));
+    spec.cap_add = SERVICE_CAPS.iter().map(|c| c.to_string()).collect();
+    let id = rt.create(&spec).await.unwrap();
+    rt.start(&id).await.unwrap();
+    let check = vec!["sh".into(), "-c".into(), "pg_isready -U postgres".into()];
+    let mut healthy = false;
+    for _ in 0..60 {
+        if rt.exec(&id, &check).await.unwrap().exit_code == 0 {
+            healthy = true;
+            break;
+        }
+        assert!(
+            rt.is_running(&id).await.unwrap(),
+            "{}",
+            rt.logs_tail(&id, 20).await.unwrap()
+        );
+        tokio::time::sleep(Duration::from_millis(500)).await;
+    }
+    assert!(healthy, "{}", rt.logs_tail(&id, 20).await.unwrap());
+    rt.stop(&id, Duration::from_secs(2)).await.unwrap();
+    rt.remove(&id).await.unwrap();
+}
