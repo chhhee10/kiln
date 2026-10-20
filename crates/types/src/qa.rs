@@ -146,11 +146,13 @@ pub struct CriterionResult {
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct TestSummary {
+    #[serde(deserialize_with = "crate::lenient::u32")]
     pub passed: u32,
+    #[serde(deserialize_with = "crate::lenient::u32")]
     pub failed: u32,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::lenient::u32")]
     pub skipped: u32,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::lenient::u32")]
     pub running: u32,
     #[serde(default)]
     pub suites: Vec<TestSuite>,
@@ -168,9 +170,11 @@ impl TestSummary {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TestSuite {
     pub name: String,
+    #[serde(deserialize_with = "crate::lenient::u32")]
     pub passed: u32,
+    #[serde(deserialize_with = "crate::lenient::u32")]
     pub failed: u32,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::lenient::u64")]
     pub duration_ms: u64,
 }
 
@@ -218,7 +222,7 @@ pub struct Finding {
     pub severity: Severity,
     #[serde(default)]
     pub file: Option<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::lenient::opt_u32")]
     pub line: Option<u32>,
     pub message: String,
 }
@@ -247,6 +251,32 @@ pub struct EvidenceRef {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn worker_reports_tolerate_sloppy_numbers() {
+        let r: QaReport = serde_json::from_str(
+            r#"{"criteria":[{"criterion":"c","status":"pass"}],
+                "tests":{"passed":3.0,"failed":"0","skipped":-1,
+                         "suites":[{"name":"unit","passed":3,"failed":0,"duration_ms":586.109616}]}}"#,
+        )
+        .unwrap();
+        assert_eq!((r.tests.passed, r.tests.failed, r.tests.skipped), (3, 0, 0));
+        assert_eq!(r.tests.suites[0].duration_ms, 586);
+        assert!(r.passed());
+        let v: ReviewVerdict = serde_json::from_str(
+            r#"{"decision":"approve","summary":"ok","findings":[
+                {"severity":"minor","line":12.0,"message":"a"},
+                {"severity":"info","line":null,"message":"b"},
+                {"severity":"info","message":"c"}]}"#,
+        )
+        .unwrap();
+        let lines: Vec<_> = v.findings.iter().map(|f| f.line).collect();
+        assert_eq!(lines, vec![Some(12), None, None]);
+        assert!(
+            serde_json::from_str::<TestSuite>(r#"{"name":"x","passed":"many","failed":0}"#)
+                .is_err()
+        );
+    }
 
     #[test]
     fn sizes() {

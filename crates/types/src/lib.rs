@@ -7,6 +7,7 @@
 pub mod api;
 pub mod event;
 pub mod ids;
+mod lenient;
 pub mod memory;
 pub mod model;
 pub mod plan;
