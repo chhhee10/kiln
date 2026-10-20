@@ -10,3 +10,7 @@ node_modules
 /PRD.md
 /design/
 *.zip
+
+# Local secrets
+.env
+.env.*

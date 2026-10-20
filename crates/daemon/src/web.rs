@@ -14,10 +14,18 @@ use tower_http::services::{ServeDir, ServeFile};
 use tower_http::set_header::SetResponseHeaderLayer;
 
 /// Pick the web build directory: `web_dir` (default `<data>/web`) when it has
-/// an `index.html`; in dev, fall back to the repo's `app/dist`.
+/// an `index.html`, else `web/` next to the executable (release archives);
+/// in dev, fall back to the repo's `app/dist`.
 pub fn find_web_dir(configured: &Path, dev: bool) -> Option<PathBuf> {
     if configured.join("index.html").is_file() {
         return Some(configured.to_path_buf());
+    }
+    if let Some(beside) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|d| d.join("web")))
+        .filter(|d| d.join("index.html").is_file())
+    {
+        return Some(beside);
     }
     if dev {
         let candidates = [
