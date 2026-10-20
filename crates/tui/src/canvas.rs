@@ -1,5 +1,5 @@
 //! Cell-grid drawing primitives that mirror the prototype's `put` / `fill` /
-//! `box` / `bar` helpers (design/designs/TUI.dc.html `build()`), so layout
+//! `box` / `bar` helpers, so layout
 //! coordinates map 1:1 onto the Ratatui buffer.
 
 use crate::theme::*;

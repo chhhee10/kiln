@@ -1,4 +1,4 @@
-//! OCI sandbox for Kiln worker runs (PRD §7.7, ARCHITECTURE.md "sandbox").
+//! OCI sandbox for Kiln worker runs (ARCHITECTURE.md "sandbox").
 //!
 //! One container per run. The daemon builds a [`ContainerSpec`] (image,
 //! command, env, [`mounts_for`] the role, resource limits, labels) and drives

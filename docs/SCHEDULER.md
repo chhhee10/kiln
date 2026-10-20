@@ -50,11 +50,11 @@ impl Scheduler {
 |---|---|---|
 | dispatcher | `Event::SchedulerWake` or tick | admit queued tasks (below) and spawn a `TaskDriver` per admitted task |
 | run socket server | per run | `UnixListener` at `<run_dir>/kiln.sock`; Hello token check (sha256 vs `runs.token_hash`); Welcome(RunConfig); events → `store.insert_run_events` (idempotent) + `bus Log` + L0 batch (`memory.ingest_l0`, redacted with the run's `Redactor` + `scan_for_secrets`) → `Ack{seq}`; `MemoryRequest` → gateway as the run owner (project-scoped); `Complete` → outcome. Multiple connections per run are allowed (the `mcp` subprocess opens its own). |
-| ingest | `Event::RunFinished` | reconcile `<run_dir>/spool.jsonl` vs stored seqs, parse native transcript (`harness.parse_transcript` over `<run_dir>/transcripts/`), scan+redact, flush to L0, `mark_ingested`, publish `RunIngested`, remove container, enqueue `distill` job. Never delete a run folder before `ingested` (PRD §7.9). |
+| ingest | `Event::RunFinished` | reconcile `<run_dir>/spool.jsonl` vs stored seqs, parse native transcript (`harness.parse_transcript` over `<run_dir>/transcripts/`), scan+redact, flush to L0, `mark_ingested`, publish `RunIngested`, remove container, enqueue `distill` job. Never delete a run folder before `ingested`. |
 | jobs | tick | `distill` (memory.distill → optional Distiller container with owner creds → memory.extract → rebuild_packs → MemoryChanged), `nightly` (03:00 local: memory.nightly, prune run_events > 14d, cleanup dead containers / worktrees of terminal tasks / dangling images / run folders past retention (ingested only)), `poll_prs` (every 5 min: Ready tasks → `prs.pr_state` → `Merged` transition + plan status Merged when all tasks merged). |
 | machine sampler | 2 s | `sysinfo` CPU/RAM/disk + runtime stats → `MachineStats` (32-sample CPU history) → `bus Machine` every 2s; health checks (runtime ping, disk < 10% free, queue backlog > 20 or oldest > 30 min) → `SystemAlert` notifications to admins (deduped, at most hourly). |
 
-## Admission control & fair-share (PRD §7.6)
+## Admission control & fair-share
 
 A task is *runnable* when `state == Queued`, every `depends_on` task is `Ready` or
 `Merged`, and its owner is active. Each dispatcher pass:
@@ -148,7 +148,7 @@ plan Dispatched; thread Dispatched; wake dispatcher. Summary:
 4. Managed containers with no live run row → remove (orphans). Networks `kiln-run-*` without live runs → remove.
 5. Runs finished but not ingested → enqueue ingest.
 
-A daemon restart mid-run must lose no task state, events or transcripts (PRD §13).
+A daemon restart mid-run must lose no task state, events or transcripts.
 
 ## Daemon (`kilnd`)
 
@@ -169,7 +169,7 @@ A daemon restart mid-run must lose no task state, events or transcripts (PRD §1
 - **Binding**: `bind = "tailscale"` → `tailscale ip -4` (or interface `utun*`/`tailscale0` address); refuse to start if missing unless `--dev` (127.0.0.1). Never 0.0.0.0.
 - **HTTP**: every route in `kiln_types::api` docs. Auth extractor: `Authorization: Bearer` or `kiln_session` cookie (Secure, HttpOnly, SameSite=Strict); WS also accepts `?token=`. Permission rules:
   - board/task cards: visible to every active user (team board, with user filter);
-  - task logs, artifacts, transcripts, QA report bodies, verdicts: **owner only** (admins see metadata, not content) — "never read another user's artifacts" (PRD §13);
+  - task logs, artifacts, transcripts, QA report bodies, verdicts: **owner only** (admins see metadata, not content) — "never read another user's artifacts";
   - memory: gateway enforces visibility on every read;
   - credentials: owner only, never returned decrypted;
   - admin routes: admin only.

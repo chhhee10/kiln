@@ -1,5 +1,5 @@
 //! `kiln-runner`: the in-container driver for one Kiln worker run
-//! (PRD §7.7, ARCHITECTURE.md "runner").
+//! (ARCHITECTURE.md "runner").
 //!
 //! Subcommands:
 //! * `run` (default) — connect to the daemon socket, drive the configured

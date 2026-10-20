@@ -8,7 +8,7 @@ brain** learns from every run, with per-user privacy.
 
 > "Kiln" is a provisional name — see [`DECISIONS.md`](DECISIONS.md).
 
-- **Spec:** [`PRD.md`](PRD.md) (behavior) · [`design/`](design/README.md) (visuals) · [`DECISIONS.md`](DECISIONS.md) (assumptions)
+- **Decisions:** [`DECISIONS.md`](DECISIONS.md) (assumptions and defaults)
 - **Internals:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (crates & contracts) · [`docs/SCHEDULER.md`](docs/SCHEDULER.md) (pipeline, recovery, daemon)
 
 ## Components
@@ -55,7 +55,7 @@ systemd unit), `kilnd admin reset-password <email>`.
 3. `cargo build --release -p kiln-daemon -p kiln-tui` (add `--features kiln-memory/full` for LanceDB/fastembed/DataFusion; needs `protoc`).
 4. Copy `config/kiln.example.toml` to `<data_dir>/kiln.toml`; keep `data_dir` short (Unix socket paths are limited to ~100 bytes), choose `[github] mode = "app"` with your GitHub App id + key.
 5. `kilnd install`, load the service, then `tailscale serve` HTTPS in front of it.
-6. First run: open the app (or TUI) → create the admin, allowed email domain, register projects (each with a `qa.yaml`, see PRD §8.2).
+6. First run: open the app (or TUI) → create the admin, allowed email domain, register projects (each with a `qa.yaml`; see the example in `crates/daemon/src/seed.rs`).
 
 ## Status
 

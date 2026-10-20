@@ -1,4 +1,4 @@
-//! Nightly maintenance (PRD §7.9): compact L0, enforce retention, merge
+//! Nightly maintenance: compact L0, enforce retention, merge
 //! duplicates, flag stale items, expire low-salience episodes.
 
 use crate::Memory;
@@ -11,7 +11,7 @@ use kiln_types::{MemoryId, ProjectId, Timestamp};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// Retention bounds from the PRD ("retention 60–90 days").
+/// L0 retention bounds: 60–90 days.
 pub const MIN_RETENTION_DAYS: u32 = 60;
 pub const MAX_RETENTION_DAYS: u32 = 90;
 

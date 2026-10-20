@@ -1,5 +1,4 @@
-//! Android surface: "Android v2", chat-first Material 3
-//! (design/docs/android.md, prototype designs/Android v2.dc.html).
+//! Android surface: "Android v2", chat-first Material 3.
 //!
 //! - `nav`    tabs, pushed screens, sheets, back stack, deep links (pure).
 //! - `feed`   the Planner feed view-model: cards, chips, resolution (pure).

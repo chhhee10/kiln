@@ -1,5 +1,5 @@
 //! Crash recovery: a daemon restart mid-run loses no task state, events or
-//! transcripts (PRD §13).
+//! transcripts.
 
 mod common;
 

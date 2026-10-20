@@ -1,4 +1,4 @@
-//! Kiln company brain (PRD §5.4, §7.9).
+//! Kiln company brain.
 //!
 //! # Layers
 //! * **L0 raw** — every run event, redacted, in zstd JSONL segments under

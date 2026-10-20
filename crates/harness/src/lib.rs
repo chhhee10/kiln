@@ -1,4 +1,4 @@
-//! Harness adapters (PRD §7.8, ARCHITECTURE.md "harness").
+//! Harness adapters (ARCHITECTURE.md "harness").
 //!
 //! A [`Harness`] knows how to launch one agent CLI/SDK inside the worker
 //! container and how to normalize its output into [`RunEventKind`]s:

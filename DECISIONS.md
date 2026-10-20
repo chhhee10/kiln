@@ -1,47 +1,45 @@
 # Decisions & assumptions
 
-Made autonomously on 2026-10-19 to unblock the build. Each one is reversible; the
-"Change it by" line says where. The PRD (`PRD.md`) and the design handoff
-(`design/`) remain the sources of truth for everything not listed here.
+Design decisions and defaults behind Kiln. Each one is reversible; the
+"Change it by" column says where.
 
-## Open decisions from PRD §14
+## Core decisions
 
 | # | Decision | Chosen | Why | Change it by |
 |---|---|---|---|---|
-| 1 | Distiller/extractor credentials | **Run owner's credentials** | Matches the PRD recommendation; keeps cost attribution and data-access boundaries per user. | `memory::distill` takes a `CredentialSource`; add an `AdminSystemKey` variant. |
-| 2 | Container images | **One base image + per-project extras** (`qa.yaml: image` may still override with a full custom image) | One image to keep patched; projects add apt/npm/cargo extras via `qa.yaml: extras`. | `qa.yaml` `image:` field. |
+| 1 | Distiller/extractor credentials | **Run owner's credentials** | Keeps cost attribution and data-access boundaries per user. | `memory::distill` takes a `CredentialSource`; add an `AdminSystemKey` variant. |
+| 2 | Container images | **One base image + per-project extras** (`qa.yaml: image` may still override with a full custom image) | One image to keep patched; projects add apt/npm/cargo/pip extras via `qa.yaml: extras`. | `qa.yaml` `image:` field. |
 | 3 | Worktrees | **Host worktrees mounted in** | Faster, shares the object store. The repo's common git dir is mounted read-only at the *same absolute path* inside the container so the worktree's `.git` pointer resolves. | `sandbox::mounts`. |
-| 4 | QA multi-service stacks | **Sidecar containers managed by the daemon** on a per-run Docker network | Isolation: QA never gets the host runtime socket. `qa.yaml: services:` declares them (compose-like subset). `boot:` commands still run inside the QA container. | `scheduler::qa_services`. |
-| 5 | Product name | **Kiln** (provisional) | Short, unclaimed in this workspace, fits "things go in, finished work comes out". Binaries: `kilnd` (daemon), `kiln` (TUI), `kiln-runner`. | Single constant `kiln_types::PRODUCT_NAME` + crate prefix `kiln-`; a find/replace renames it. UI copy keeps reading the constant. |
+| 4 | QA multi-service stacks | **Sidecar containers managed by the daemon** on a per-run Docker network | Isolation: QA never gets the host runtime socket. `qa.yaml: services:` declares them (compose-like subset). `boot:` commands still run inside the QA container. | `scheduler::runs`. |
+| 5 | Product name | **Kiln** | Short, fits "things go in, finished work comes out". Binaries: `kilnd` (daemon), `kiln` (TUI), `kiln-runner`. | Single constant `kiln_types::PRODUCT_NAME` + crate prefix `kiln-`; a find/replace renames it. UI copy keeps reading the constant. |
 
-## PRD ↔ design-handoff mismatches
+## UI and model choices
 
-| Mismatch | Resolution |
+| Topic | Resolution |
 |---|---|
-| PRD §6 expects `./design/tokens/`, `./design/components/`, … | The handoff is extracted to `design/` as shipped (`designs/`, `docs/`, `tokens/`). PRD §6 paths updated. |
-| Android home: PRD says inbox-first; design says **Android v2 is chosen** (chat-first: Planner / Runs / You) | **Build Android v2.** The handoff is explicitly marked "CHOSEN" and newer. The PRD's "inbox" requirement is satisfied by the Planner feed's *Needs you* filter + cards; "compact board" = Runs. PRD §6.3 updated. |
-| Board columns vs task state machine | Mapping (in `kiln_types::TaskState::column()`): **Idea** = plan in draft (not yet tasks) · **Planned** = `Queued`, `Preparing` · **Building** = `Building`, `Looping` · **QA** = `Testing` · **Review** = `Reviewing` · **Ready** = `Ready` (PR open) · **Done** = new state `Merged` (PR merged, detected by polling GitHub). `Escalated`/`Failed`/`Cancelled` stay in the column of the last active stage and render with their status indicator. |
-| Hardware: PRD "M6, 32 GB" vs mock "M4 Pro · 12 cores" | Nothing hard-coded. The admin machine line is read live from the host (`sysinfo`). Capacity is RAM-aware from config (`[capacity]` in `kiln.toml`). |
-| Settings mock lists **OpenCode** as a harness | Adapters shipped: `claude_sdk`, `codex`, `opencode` (experimental), and `mock` (deterministic, for tests/demo — no model calls). Harness *and* model lists are config (`[harnesses.*]` in `kiln.toml`), so the mock's model names (claude-opus-4.1, gpt-5…) are only seed defaults. |
-| Mock has three products (Acme CLI/SDK, Cloud, website) | Seed/demo data only; projects are registered at runtime. |
+| Android home | **Android v2** (chat-first: Planner / Runs / You). The "inbox" is the Planner feed's *Needs you* filter + cards; the compact board is Runs. |
+| Board columns vs task state machine | Mapping (in `kiln_types::TaskState::column()`): **Idea** = plan in draft (not yet tasks) · **Planned** = `Queued`, `Preparing` · **Building** = `Building`, `Looping` · **QA** = `Testing` · **Review** = `Reviewing` · **Ready** = `Ready` (PR open) · **Done** = `Merged` (PR merged, detected by polling GitHub). `Escalated`/`Failed`/`Cancelled` stay in the column of the last active stage and render with their status indicator. |
+| Hardware | Nothing hard-coded. The admin machine line is read live from the host (`sysinfo`). Capacity is RAM-aware from config (`[capacity]` in `kiln.toml`). |
+| Harnesses | Adapters shipped: `claude_sdk`, `codex`, `opencode` (experimental), and `mock` (deterministic, for tests/demo — no model calls). Harness *and* model lists are config (`[harnesses.*]` in `kiln.toml`); the built-in model names are only seed defaults. |
+| Demo data | `--demo-seed` creates a fictional company (Acme) with three projects; real projects are registered at runtime. |
 
 ## Build-time assumptions
 
 - **Platform here:** development machine is Linux x86_64 without WebKitGTK dev libraries and without sudo. Consequences:
   - The Tauri shell (`app/src-tauri`) is written but can't be compiled on this box; it is excluded from the workspace `default-members`. The Leptos UI (`app/`) compiles to WASM with `trunk` and is **also served by the daemon at `/app`**, so desktop/Android UI can be exercised in any browser against a real daemon.
-  - Service files: launchd plist (primary per PRD) and a systemd user unit are both generated by `kilnd install`.
+  - Service files: launchd plist (primary; the target host is a Mac mini) and a systemd user unit are both generated by `kilnd install`.
 - **Heavy indexes behind traits.** `memory` defines `VectorIndex`, `TextIndex`, `Embedder` traits.
   - Text: **Tantivy** (default on).
   - Vectors: a built-in exact cosine index in SQLite (default — fine for a 4-person company brain up to ~10⁵ items) and **LanceDB** behind cargo feature `lance` (needs `protoc`).
   - Embeddings/rerank: **fastembed** behind feature `fastembed` (downloads ONNX models on first use); default build uses a deterministic hashing embedder so tests run offline.
   - L0 raw: zstd JSONL segments, compacted nightly into **Parquet (zstd)**; ad-hoc SQL over L0 via **DataFusion** behind feature `datafusion`.
   The release build (`cargo build --release --features full`) enables all of them.
-- **GitHub:** `gitops::PrProvider` trait with `GitHubApp` (octocrab, PRD default), `GitHubToken` (PAT / `gh auth token`, for dev) and `Local` (records PRs in SQLite; used in tests with a local bare remote).
+- **GitHub:** `gitops::PrProvider` trait with `GitHubApp` (octocrab), `GitHubToken` (PAT / `gh auth token`, for dev) and `Local` (records PRs in SQLite; used in tests with a local bare remote).
 - **Network bind:** `kilnd` binds to the Tailscale interface address when found (`tailscale ip -4`), otherwise refuses to start unless `--dev` (binds 127.0.0.1). HTTPS is expected from `tailscale serve`.
 - **Master key:** OS keychain via `keyring`; when no keychain/Secret Service is available (headless Linux), falls back to `<data_dir>/master.key` (0600) and logs a warning.
 - **Push:** UnifiedPush/ntfy via HTTP POST to the device's registered endpoint; ntfy server is self-hosted and optional. Devices that register Web Push keys (the Android app always does, via the UnifiedPush connector) get RFC 8291 `aes128gcm` ciphertext, so the relay never sees notification text; devices without keys still get plain JSON. One record holds ~4 KB, so long bodies are shortened to fit.
 - **Merged detection** polls open PRs every 5 min (no public webhook endpoint since there's no public listener).
-- **Task visibility:** board cards (title, state, owner, progress) are visible to the whole team, so the board's people filter is useful. Logs, transcripts, artifacts, QA report bodies and verdicts are **owner-only** (admins see metadata, not content), meeting PRD §13 "never read another user's … artifacts".
+- **Task visibility:** board cards (title, state, owner, progress) are visible to the whole team, so the board's people filter is useful. Logs, transcripts, artifacts, QA report bodies and verdicts are **owner-only** (admins see metadata, not content), so no user can read another user's artifacts.
 - **Stacked dependencies:** if task B depends on A and A is Ready (PR open, unmerged), B branches from A's branch and its PR targets A's branch. Once A is merged, dependents use the default branch.
 - **Stop** moves a task to `Cancelled` (gray, meta "Stopped"), matching the desktop mock. Retry re-queues it.
 - **Feedback on an escalated task** grants exactly one more Builder attempt; it doesn't reset the whole loop budget.

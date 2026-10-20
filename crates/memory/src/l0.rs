@@ -28,7 +28,7 @@ const SEEN_CACHE_RUNS: usize = 256;
 /// zstd level for L0 frames.
 const ZSTD_LEVEL: i32 = 3;
 
-/// One normalized L0 row (PRD §7.9: every row carries access tags).
+/// One normalized L0 row.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct L0Row {
     pub run_id: RunId,

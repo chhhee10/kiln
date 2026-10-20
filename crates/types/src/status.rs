@@ -1,5 +1,5 @@
 //! Task/run state machines and the cross-surface status semantics
-//! (design/docs/tokens.md "Status semantics").
+//!.
 
 use serde::{Deserialize, Serialize};
 
@@ -68,7 +68,7 @@ impl Status {
 /// Braille spinner frames for `running` in the TUI (advance every 120 ms).
 pub const SPINNER: [&str; 10] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
-/// Task lifecycle (PRD §4.3, plus `Merged` for the board's Done column).
+/// Task lifecycle (plus `Merged` for the board's Done column).
 ///
 /// ```text
 /// Queued → Preparing → Building → Testing → Reviewing → Ready → Merged
@@ -93,7 +93,7 @@ pub enum TaskState {
     Cancelled,
 }
 
-/// Board columns (PRD §5.3). `Idea` holds draft plans, not tasks.
+/// Board columns. `Idea` holds draft plans, not tasks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum BoardColumn {

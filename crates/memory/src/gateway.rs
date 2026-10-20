@@ -713,7 +713,7 @@ impl Memory {
         Ok(self.propose_detailed(owner, source_run, p).await?.item)
     }
 
-    /// Propose with full outcome. Rules (PRD §4.5, §5.4):
+    /// Propose with full outcome. Rules:
     /// * `Preference` ⇒ forced `Private`.
     /// * `Private` ⇒ `Active` immediately.
     /// * `Shared`/`Company` ⇒ `Pending` with `requested_visibility`; the

@@ -175,7 +175,7 @@ impl Default for RuntimeConfig {
     }
 }
 
-/// `[capacity]`: admission control inputs (PRD §7.6).
+/// `[capacity]`: admission control inputs.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct CapacityConfig {
@@ -225,7 +225,7 @@ impl Default for TimeoutsConfig {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GithubMode {
-    /// GitHub App installation tokens (PRD default).
+    /// GitHub App installation tokens.
     App,
     /// A personal access token (env var, or `gh auth token`).
     Token,
@@ -287,7 +287,7 @@ pub struct WorkerDefaults {
 }
 
 impl Default for WorkerDefaults {
-    // Seed defaults from the design mocks (Settings → Worker defaults).
+    // Seed defaults (Settings → Worker defaults).
     fn default() -> Self {
         Self {
             planner: "claude_sdk:claude-opus-4.1".into(),
@@ -723,8 +723,7 @@ impl Config {
     }
 }
 
-/// Built-in catalog. These model lists are **editable seed defaults** taken
-/// from the design mocks; override them with `[harnesses.<id>] models = [...]`.
+/// Built-in catalog. These model lists are **editable seed defaults**; override them with `[harnesses.<id>] models = [...]`.
 pub fn builtin_harnesses() -> Vec<HarnessInfo> {
     let s = |v: &[&str]| v.iter().map(|m| m.to_string()).collect::<Vec<_>>();
     vec![

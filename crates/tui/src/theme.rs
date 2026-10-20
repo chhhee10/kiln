@@ -1,4 +1,4 @@
-//! TUI palette (`design/tokens/tui_palette.rs`) plus the 256-color fallback.
+//! TUI palette plus the 256-color fallback.
 //!
 //! Rendering always uses the truecolor constants below. When the terminal
 //! doesn't advertise truecolor (`COLORTERM` is not `truecolor`/`24bit`) the

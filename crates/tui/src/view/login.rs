@@ -1,4 +1,4 @@
-//! Login (tui.md screen 1) and the first-run wizard (PRD §4.1), which uses the
+//! Login (tui.md screen 1) and the first-run wizard, which uses the
 //! same visual language: dotted backdrop, centered accent box, FIELD inputs.
 
 use super::clock;

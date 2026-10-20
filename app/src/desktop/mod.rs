@@ -1,4 +1,4 @@
-//! Desktop surface (design/docs/desktop.md, prototype designs/Desktop.dc.html).
+//! Desktop surface.
 
 pub mod admin;
 pub mod board;

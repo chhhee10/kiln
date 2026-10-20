@@ -1,4 +1,4 @@
-//! HTTP API contract (PRD §7.11). All routes live under `/api/v1`.
+//! HTTP API contract. All routes live under `/api/v1`.
 //! Auth: `Authorization: Bearer <token>` (TUI) or the `kiln_session`
 //! HTTP-only cookie (desktop/Android/web). Errors are `ApiError` JSON with a
 //! matching HTTP status.

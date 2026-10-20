@@ -1,5 +1,5 @@
-//! Normalized run events (the common schema every harness adapter maps into,
-//! PRD §7.8) and the server → client WebSocket events (PRD §7.11).
+//! Normalized run events (the common schema every harness adapter maps into)
+//! and the server → client WebSocket events.
 
 use crate::ids::*;
 use crate::memory::MemoryItem;
@@ -7,7 +7,7 @@ use crate::model::*;
 use crate::status::WorkerRole;
 use serde::{Deserialize, Serialize};
 
-/// Log levels used in log panes (design/docs/tokens.md "Log levels").
+/// Log levels used in log panes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum LogLevel {

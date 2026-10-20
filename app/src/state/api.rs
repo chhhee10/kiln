@@ -411,7 +411,7 @@ impl AppState {
         let _ = (prev, ClientMessage::Ping);
     }
 
-    /// Stop / Retry / Escalate / Feedback on a task (PRD §4.4).
+    /// Stop / Retry / Escalate / Feedback on a task.
     pub fn task_action(&self, id: TaskId, action: TaskAction) {
         if self.is_demo() {
             let now = chrono::Utc::now();

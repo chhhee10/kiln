@@ -16,8 +16,7 @@ import androidx.core.app.NotificationManagerCompat
 import org.json.JSONObject
 
 /**
- * Native notifications for daemon pushes (design/docs/android.md
- * "Notifications"). Payload (crates/notifier `PushPayload`):
+ * Native notifications for daemon pushes. Payload (crates/notifier `PushPayload`):
  * `{ id, kind, channel, title, body, deep_link, actions:[{id,label}], progress?, resolved? }`.
  *
  * Channels: Decisions (high, heads-up) · Failures (high) · Ready for review

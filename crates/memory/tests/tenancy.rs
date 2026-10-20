@@ -1,4 +1,4 @@
-//! Release acceptance (PRD §13): one user can never read another user's
+//! Release acceptance: one user can never read another user's
 //! private memory. Every gateway read path is checked against the oracle
 //! `MemoryItem::visible_to` over every visibility × status × kind × project
 //! combination, including with stale and actively lying indexes.

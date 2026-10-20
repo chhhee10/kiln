@@ -4,7 +4,7 @@
 //! - [`app::App`] holds all UI state; [`app::App::update`] maps a [`app::Msg`]
 //!   (key, paste, tick, resize, data event) to new state plus [`model::Cmd`]s.
 //! - [`view::render`] is a pure function of `&App` drawing into a Ratatui
-//!   frame; every screen ports the coordinates of `design/designs/TUI.dc.html`.
+//!   frame; every screen ports the coordinates of the TUI prototype.
 //! - A [`source::DataSource`] executes commands and streams
 //!   [`model::DataEvent`]s back: [`live::LiveSource`] (daemon over HTTP + WS)
 //!   or [`demo::DemoSource`] (in-process simulation).

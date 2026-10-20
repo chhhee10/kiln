@@ -1,5 +1,5 @@
 //! Dispatcher: admission control, fair-share and dependency gating
-//! (PRD §7.6, docs/SCHEDULER.md "Admission control & fair-share").
+//! (docs/SCHEDULER.md "Admission control & fair-share").
 //!
 //! A task is *runnable* when it is Queued, every dependency is Ready or
 //! Merged, and its owner is active. Each pass builds per-user FIFOs of

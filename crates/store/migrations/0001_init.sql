@@ -1,4 +1,4 @@
--- Kiln control-store schema (PRD §8.1). SQLite, WAL mode.
+-- Kiln control-store schema. SQLite, WAL mode.
 -- Conventions:
 --   * ids are UUIDv7 strings (TEXT), timestamps are RFC3339 UTC strings (TEXT)
 --   * JSON columns are TEXT holding serde_json of the matching kiln-types struct
@@ -152,7 +152,7 @@ CREATE TABLE tasks (
 CREATE INDEX tasks_state ON tasks(state);
 CREATE INDEX tasks_owner ON tasks(owner_id, state);
 
--- Every task state transition, persisted before its side effect (PRD §7.6).
+-- Every task state transition, persisted before its side effect.
 CREATE TABLE task_transitions (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     task_id     TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
@@ -232,7 +232,7 @@ CREATE TABLE pull_requests (           -- used by the Local PR provider and merg
     updated_at  TEXT NOT NULL
 );
 
--- Persistent job queue (PRD §7.6).
+-- Persistent job queue.
 CREATE TABLE jobs (
     id          TEXT PRIMARY KEY,
     kind        TEXT NOT NULL,          -- "run_role", "distill", "extract", "rebuild_packs", "nightly", "poll_prs", ...
@@ -267,7 +267,7 @@ CREATE TABLE notifications (
 );
 CREATE INDEX notifications_user ON notifications(user_id, created_at);
 
--- ------------------------------------------------------------- memory (PRD §7.9)
+-- ------------------------------------------------------------- memory
 -- Every row carries owner, visibility, shared_with (via memory_shares),
 -- project, type, source_run, status, created_at, updated_at.
 

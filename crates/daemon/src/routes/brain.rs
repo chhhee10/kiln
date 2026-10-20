@@ -1,7 +1,7 @@
 //! Company brain (memory gateway) and the credential vault.
 //!
 //! Memory: every call goes through `kiln_memory::Memory` with the requesting
-//! user, which enforces visibility on every read (PRD §9).
+//! user, which enforces visibility on every read.
 //! Credentials: the vault scopes every call to the caller; secrets are never
 //! returned, only masked summaries.
 

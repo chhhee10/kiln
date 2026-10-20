@@ -10,7 +10,7 @@ use std::time::Duration;
 /// Default base worker image.
 pub const DEFAULT_WORKER_IMAGE: &str = "ghcr.io/chhhee10/kiln-worker:0.1.0";
 
-/// Machine capacity used by admission control (PRD §7.6). RAM-aware: the
+/// Machine capacity used by admission control. RAM-aware: the
 /// defaults are derived from the host's RAM when `ram_mb` is 0.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
@@ -70,7 +70,7 @@ impl Capacity {
     }
 }
 
-/// Per-role run timeouts, in minutes (PRD §7.6). A `qa.yaml` `timeouts:` map
+/// Per-role run timeouts, in minutes. A `qa.yaml` `timeouts:` map
 /// overrides them per project.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]

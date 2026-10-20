@@ -1,4 +1,4 @@
-//! Kiln credential vault (PRD §5.5, §7.5).
+//! Kiln credential vault.
 //!
 //! * Each secret is encrypted with **ChaCha20-Poly1305** under the master key
 //!   with a random 96-bit nonce. The AEAD associated data is

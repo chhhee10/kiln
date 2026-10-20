@@ -1,4 +1,4 @@
-//! `kiln-gitops`: git plumbing and pull requests for Kiln (PRD §7.10).
+//! `kiln-gitops`: git plumbing and pull requests for Kiln.
 //!
 //! * **Mirrors** — one bare repository per project at
 //!   `<data>/repos/<KEY>.git`. Remote branches are fetched into

@@ -1,7 +1,6 @@
 # Kiln — implementation architecture
 
-Companion to `PRD.md` (behavior), `design/` (visuals) and `DECISIONS.md`
-(assumptions). This file fixes the **crate boundaries and public APIs** so
+Companion to `DECISIONS.md` (assumptions) and `docs/SCHEDULER.md`. This file fixes the **crate boundaries and public APIs** so
 crates can be built in parallel. If you change a public API listed here,
 update this file in the same change.
 

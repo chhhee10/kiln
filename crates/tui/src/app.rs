@@ -1,8 +1,7 @@
 //! Elm-style application state: [`App`] + [`App::update`]. Rendering lives in
 //! [`crate::view`] and only reads `&App`.
 //!
-//! The keymap is a port of the prototype's `onKey` (design/designs/TUI.dc.html)
-//! and the keymap table in design/docs/tui.md.
+//! The keymap is a port of the prototype's `onKey` and its keymap table.
 
 use crate::model::*;
 use crate::palette::{self, PalAction};
@@ -73,7 +72,7 @@ pub struct LoginUi {
     pub busy: bool,
 }
 
-/// First-run wizard (PRD §4.1).
+/// First-run wizard.
 #[derive(Clone, Debug)]
 pub struct SetupUi {
     pub step: usize,

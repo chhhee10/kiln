@@ -11,8 +11,7 @@ use async_trait::async_trait;
 use kiln_types::memory::{MemoryStatus, MemoryType, Visibility};
 use kiln_types::{ProjectId, UserId};
 
-/// Access tags stored alongside every indexed row (PRD §7.9: every row in
-/// every layer carries owner/visibility/shared_with/project/type/status).
+/// Access tags stored alongside every indexed row (every row in every layer carries owner/visibility/shared_with/project/type/status).
 #[derive(Clone, Debug, PartialEq)]
 pub struct IndexMeta {
     pub owner: UserId,

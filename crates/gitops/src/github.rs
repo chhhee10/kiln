@@ -222,7 +222,7 @@ struct CachedToken {
     expires_at: DateTime<Utc>,
 }
 
-/// GitHub App provider (PRD default): signs an RS256 app JWT, finds the
+/// GitHub App provider: signs an RS256 app JWT, finds the
 /// installation covering the repository, and mints installation access
 /// tokens scoped to that single repository. Tokens are cached until
 /// [`TOKEN_REFRESH_MARGIN_SECS`] before expiry.

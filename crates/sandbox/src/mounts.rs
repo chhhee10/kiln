@@ -1,4 +1,4 @@
-//! Mount layout for worker containers (DECISIONS.md #3, PRD §7.7).
+//! Mount layout for worker containers (DECISIONS.md #3).
 //!
 //! | host                                   | container                      | mode                    |
 //! |----------------------------------------|--------------------------------|-------------------------|

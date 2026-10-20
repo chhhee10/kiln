@@ -2,7 +2,7 @@
 //! context) to a `Shortcut`. The desktop surface installs one window keydown
 //! listener that calls `map_key` and dispatches the result.
 //!
-//! Rules (design/docs/desktop.md "Global keyboard"):
+//! Rules:
 //! - ⌘K / Ctrl+K toggles the palette from anywhere.
 //! - While the palette is open it owns ↑ ↓ ↵ Esc.
 //! - Esc closes the top overlay → the side panel → goes back from a task.

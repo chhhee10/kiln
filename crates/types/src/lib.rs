@@ -22,7 +22,7 @@ pub use status::*;
 pub const PRODUCT_NAME: &str = "Kiln";
 
 /// Version shared by daemon and clients. Clients refuse to talk to a daemon
-/// with a different major.minor (PRD §7.13 "clients are version-matched").
+/// with a different major.minor.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Default maximum number of Builder loops before a task escalates.

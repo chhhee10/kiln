@@ -1,4 +1,4 @@
-//! `jobs`: the persistent work queue (PRD §7.6).
+//! `jobs`: the persistent work queue.
 //!
 //! A job is `queued` until a worker claims it (`running`, `locked_at` set,
 //! `attempts` incremented), then ends `done`, `failed` or `cancelled`. A

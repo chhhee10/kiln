@@ -416,7 +416,7 @@ impl Scheduler {
                 let _ = self.gitops.remove_worktree(p, &t.key).await;
             }
         }
-        // Run folders past retention — ingested runs only (PRD §7.9).
+        // Run folders past retention — ingested runs only.
         let cutoff = now - chrono::Duration::days(i64::from(self.cfg.run_retention_days));
         let mut removed = 0;
         if let Ok(rd) = std::fs::read_dir(self.cfg.data_dir.join("runs")) {

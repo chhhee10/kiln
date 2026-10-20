@@ -1,4 +1,4 @@
-//! Plan schema (PRD §8.3). The Planner must emit JSON matching `PlanSpec`;
+//! Plan schema. The Planner must emit JSON matching `PlanSpec`;
 //! `PlanSpec::validate` is the authoritative check.
 
 use crate::status::WorkerRole;
@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Harness + model for one worker role. Both are free-form configuration
-/// strings so new models need no release (PRD §7.8).
+/// strings so new models need no release.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WorkerChoice {
     pub harness: String,

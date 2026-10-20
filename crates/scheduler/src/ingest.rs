@@ -1,4 +1,4 @@
-//! Ingest (docs/SCHEDULER.md "ingest", PRD §7.9 "spool & flush").
+//! Ingest (docs/SCHEDULER.md "ingest").
 //!
 //! For every finished run: reconcile `<run_dir>/spool.jsonl` against the
 //! stored `run_events` seqs (anything the socket missed is inserted now),

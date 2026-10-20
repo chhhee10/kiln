@@ -1,5 +1,4 @@
-/* Kiln app styles. Tokens come from design/tokens/tokens.css (copied below,
-   extended with the prototype's in-between greys so light mode works).
+/* Kiln app styles. Design tokens are defined below (extended with the prototype's in-between greys so light mode works).
    Plain CSS, no Tailwind build step: every value maps to a token. Avoids
    backdrop-filter and :has() for WebKitGTK. */
 

@@ -3,8 +3,7 @@
 //! * Task cards are team-visible, but the task *content* written in the
 //!   owner's private planner session (description, acceptance criteria,
 //!   file hints) is owner-only, like logs, artifacts, transcripts, QA report
-//!   bodies, verdicts and diffs ("never read another user's artifacts",
-//!   PRD §13).
+//!   bodies, verdicts and diffs ("never read another user's artifacts").
 //! * Admins see metadata (runs, artifact listings) but never content.
 
 use crate::error::ApiResult;

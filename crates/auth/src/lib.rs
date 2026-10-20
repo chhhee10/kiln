@@ -1,4 +1,4 @@
-//! Kiln authentication (PRD §2, §7.4).
+//! Kiln authentication.
 //!
 //! * Passwords are hashed with **argon2id** into PHC strings.
 //! * Sessions are opaque bearer tokens (32 random bytes, base64url). Only the

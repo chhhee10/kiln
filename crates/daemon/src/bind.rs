@@ -1,4 +1,4 @@
-//! Listener address selection (PRD §7.4, §9: Tailscale only, never public).
+//! Listener address selection (Tailscale only, never public).
 //!
 //! `server.bind = "tailscale"` resolves the host's Tailscale IPv4 address via
 //! `tailscale ip -4`, falling back to scanning network interfaces named

@@ -1,5 +1,4 @@
-//! Sign-in for the phone (not in the design handoff; built from its M3
-//! pieces): pair by scanning the desktop/TUI QR (`kiln://pair?…`), or sign
+//! Sign-in for the phone (built from the app's M3 pieces): pair by scanning the desktop/TUI QR (`kiln://pair?…`), or sign
 //! in with server + email + password, or try the offline demo.
 
 use super::bridge;

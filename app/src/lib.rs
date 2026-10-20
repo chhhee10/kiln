@@ -2,8 +2,8 @@
 //!
 //! - `state/`   shared reactive state, API layer, live events, demo data,
 //!   shortcuts. See `state/mod.rs` for how a surface consumes it.
-//! - `desktop/` the desktop layout (design/docs/desktop.md).
-//! - `android/` the Android v2 layout (design/docs/android.md).
+//! - `desktop/` the desktop layout.
+//! - `android/` the Android v2 layout.
 //!
 //! The same build runs in the Tauri 2 shell (`src-tauri/`), in any browser
 //! at the daemon's `/app`, and under `trunk serve`.

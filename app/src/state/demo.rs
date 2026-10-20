@@ -1,4 +1,4 @@
-//! DEMO data source: the prototype's mock data (design/designs/Desktop.dc.html)
+//! DEMO data source: the prototype's mock data
 //! as real `kiln_types` values, plus a timer-driven simulation that produces
 //! the same `ServerEvent`s the daemon would. Enabled with `?demo=1` or the
 //! "Try demo" button when no daemon is reachable.

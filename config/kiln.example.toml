@@ -74,8 +74,8 @@ use_gh_cli = true
 # api_base = "https://github.example.com/api/v3"
 
 # Harness catalog. Built-ins: claude_sdk, codex, opencode (experimental) and
-# mock (only with --dev). The model lists are editable seed defaults from the
-# design mocks; any string is accepted, so new models need no release.
+# mock (only with --dev). The model lists are editable seed defaults; any
+# string is accepted, so new models need no release.
 [harnesses.claude_sdk]
 label = "Claude Agent SDK"
 models = ["claude-sonnet-4.5", "claude-opus-4.1"]

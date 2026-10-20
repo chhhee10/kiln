@@ -1,4 +1,4 @@
-//! Crash-safe event spool (`<run_dir>/spool.jsonl`, PRD §7.9 "spool & flush").
+//! Crash-safe event spool (`<run_dir>/spool.jsonl`).
 //!
 //! Every event is appended (one JSON line, written straight to the file
 //! without user-space buffering) **before** it is sent to the daemon, so a

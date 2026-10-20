@@ -2,7 +2,7 @@
 
 The Android app is the same Leptos UI as desktop (`app/`, built by trunk),
 running in the Tauri 2 shell. The UI picks the **Android v2** surface
-(`app/src/android/`, design/docs/android.md) automatically inside the
+(`app/src/android/`) automatically inside the
 Android shell (also `?surface=android` in any browser, or a narrow touch
 viewport). Everything native lives in one local plugin:
 

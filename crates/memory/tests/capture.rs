@@ -299,7 +299,7 @@ async fn retention_deletes_old_days_and_is_clamped() {
         .await
         .unwrap();
 
-    // 10 days is below the PRD floor: clamped to 60, so the 30-day-old run survives.
+    // 10 days is below the 60-day floor: clamped to 60, so the 30-day-old run survives.
     let opts = NightlyOptions {
         retention_days: 10,
         ..Default::default()

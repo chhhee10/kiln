@@ -1,4 +1,4 @@
-//! `App::update` keymap tests: every key in design/docs/tui.md's keymap table,
+//! `App::update` keymap tests: every key in the TUI keymap table,
 //! plus the overlay, INSERT/FILTER and login/setup flows.
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};

@@ -1,6 +1,5 @@
-/* Kiln Android surface: "Android v2", chat-first Material 3
-   (design/docs/android.md, prototype designs/Android v2.dc.html).
-   M3 roles come from design/tokens/tokens.css ([data-surface="android"]).
+/* Kiln Android surface: "Android v2", chat-first Material 3.
+   M3 roles come from the design tokens in app.css ([data-surface="android"]).
    Everything is scoped to the Android surface; class prefix `a-`. */
 
 [data-surface="android"] {

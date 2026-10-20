@@ -1,4 +1,4 @@
-//! Kiln notifications (PRD §5.7, design/docs/android.md "Notifications").
+//! Kiln notifications.
 //!
 //! [`Notifier::notify`] persists a notification card, publishes
 //! `ServerEvent::Notification` on the event bus (in-app delivery on every

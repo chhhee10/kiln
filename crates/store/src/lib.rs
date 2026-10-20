@@ -1,4 +1,4 @@
-//! Kiln control store (PRD §7.3, §8.1).
+//! Kiln control store.
 //!
 //! SQLite in WAL mode via `sqlx`, with the schema in `migrations/` embedded at
 //! compile time and applied on [`Store::open`]. Every query is runtime-checked

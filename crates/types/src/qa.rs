@@ -1,5 +1,5 @@
-//! `qa.yaml` profile (PRD §8.2) and the structured QA report / review verdict
-//! (PRD §8.4). Workers write these as JSON files into `/run/out/`.
+//! `qa.yaml` profile and the structured QA report / review verdict
+//!. Workers write these as JSON files into `/run/out/`.
 
 use crate::ids::ArtifactId;
 use serde::{Deserialize, Serialize};
@@ -181,7 +181,7 @@ pub struct QaReport {
     pub tests: TestSummary,
     #[serde(default)]
     pub summary: String,
-    /// Scratch branch with tests QA wrote, if any (PRD §5.2).
+    /// Scratch branch with tests QA wrote, if any.
     #[serde(default)]
     pub test_branch: Option<String>,
 }

@@ -1,5 +1,5 @@
 //! Crash recovery on [`Scheduler::start`](crate::Scheduler::start)
-//! (docs/SCHEDULER.md "Crash recovery", PRD §7.6):
+//! (docs/SCHEDULER.md "Crash recovery"):
 //!
 //! 1. re-queue stale jobs;
 //! 2. runs in Starting/Running: container alive → re-attach (new socket

@@ -1,4 +1,4 @@
-//! Shared desktop components (design/docs/components.md): status pill and
+//! Shared desktop components: status pill and
 //! dots, avatars, the 3-stage worker timeline, log pane, QA artifacts, tests,
 //! reviewer verdict and diff summary.
 

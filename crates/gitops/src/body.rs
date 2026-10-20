@@ -1,4 +1,4 @@
-//! PR body rendering (PRD §4.3 step 6, §7.10).
+//! PR body rendering.
 
 use kiln_types::plan::PlanSpec;
 use kiln_types::qa::{CriterionResult, Decision, PassFail, QaReport, ReviewVerdict};

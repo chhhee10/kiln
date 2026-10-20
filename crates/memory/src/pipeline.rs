@@ -1,4 +1,4 @@
-//! Distillation pipeline: L0 → L1 episode → L2 proposals (PRD §7.9).
+//! Distillation pipeline: L0 → L1 episode → L2 proposals.
 //!
 //! ```text
 //! L0 → distill → L1 episode → extract → proposals → salience gate

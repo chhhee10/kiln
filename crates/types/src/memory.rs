@@ -1,4 +1,4 @@
-//! Company brain (PRD §5.4, §7.9).
+//! Company brain.
 
 use crate::ids::*;
 use crate::model::Timestamp;
@@ -53,7 +53,7 @@ pub enum MemoryType {
     Convention,
     Decision,
     Procedure,
-    /// Personal preference: always Private, can never be shared (PRD §5.4).
+    /// Personal preference: always Private, can never be shared.
     Preference,
     /// L1 episode surfaced as a memory row.
     Episode,

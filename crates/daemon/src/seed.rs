@@ -1,4 +1,4 @@
-//! `--demo-seed` (dev only): the demo company from the design mocks.
+//! `--demo-seed` (dev only): a fictional demo company.
 //!
 //! * admin `admin@company.dev` (Alex Rivera) and members Jordan Lee, Morgan
 //!   Kim and Sam Diaz, all with password [`DEMO_PASSWORD`];
@@ -21,7 +21,7 @@ pub const DEMO_DOMAIN: &str = "company.dev";
 pub const DEMO_ADMIN: &str = "admin@company.dev";
 pub const DEMO_PASSWORD: &str = "kiln-demo-password";
 
-/// (name, email, role, concurrency, budget) — from the Desktop admin mock.
+/// (name, email, role, concurrency, budget).
 const PEOPLE: [(&str, &str, UserRole, u32, f64); 4] = [
     ("Alex Rivera", DEMO_ADMIN, UserRole::Admin, 4, 400.0),
     (

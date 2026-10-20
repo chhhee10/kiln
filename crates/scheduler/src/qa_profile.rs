@@ -1,4 +1,4 @@
-//! `qa.yaml` parsing (PRD §8.2) and project refresh.
+//! `qa.yaml` parsing and project refresh.
 
 use crate::Scheduler;
 use crate::error::Result;

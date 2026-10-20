@@ -1,4 +1,4 @@
-//! Internal event bus (PRD §7.11). Publishers call [`Bus::publish`] once per
+//! Internal event bus. Publishers call [`Bus::publish`] once per
 //! state change; subscribers (WebSocket fan-out, notifier, L0 spool,
 //! distiller trigger) each hold their own [`Subscription`].
 //!

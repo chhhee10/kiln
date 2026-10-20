@@ -1,4 +1,4 @@
-//! Runner ↔ daemon protocol (PRD §7.7).
+//! Runner ↔ daemon protocol.
 //!
 //! Transport: the daemon creates a Unix socket per run at
 //! `<run_dir>/kiln.sock`, mounted into the container at `/run/kiln.sock`.

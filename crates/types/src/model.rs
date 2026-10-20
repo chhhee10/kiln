@@ -1,4 +1,4 @@
-//! Core domain records (mirror the SQLite tables in PRD §8.1).
+//! Core domain records (mirror the SQLite tables in `crates/store/migrations`).
 
 use crate::ids::*;
 use crate::plan::{PlanSpec, WorkerChoice};
@@ -26,7 +26,7 @@ pub enum UserStatus {
     Disabled,
 }
 
-/// Per-user limits set by an admin (PRD §2, §5.6).
+/// Per-user limits set by an admin.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserLimits {
     /// Max tasks this user can have in flight at once (1–8).
@@ -75,7 +75,7 @@ pub fn initials_for(name: &str) -> String {
     }
 }
 
-/// Per-user preferences (PRD §4.1, settings "Worker defaults" / "Memory sharing").
+/// Per-user preferences (settings "Worker defaults" / "Memory sharing").
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UserSettings {
     pub worker_defaults: BTreeMap<WorkerRole, WorkerChoice>,
@@ -265,7 +265,7 @@ pub struct Run {
     pub tokens_in: u64,
     pub tokens_out: u64,
     pub error: Option<String>,
-    /// Retries already consumed for this run slot (PRD §7.6: retried once).
+    /// Retries already consumed for this run slot.
     pub retries: u32,
 }
 
@@ -437,7 +437,7 @@ pub struct Device {
     pub last_seen: Timestamp,
 }
 
-/// Android channels (design/docs/android.md "Notifications").
+/// Android channels.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NotificationChannel {

@@ -1,4 +1,4 @@
-//! Human task actions (PRD §4.4, docs/SCHEDULER.md "Human actions").
+//! Human task actions (docs/SCHEDULER.md "Human actions").
 //!
 //! | Action | From | Effect |
 //! |---|---|---|

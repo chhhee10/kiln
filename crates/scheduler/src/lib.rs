@@ -1,4 +1,4 @@
-//! `kiln-scheduler`: the heart of Kiln (PRD §7.6, docs/SCHEDULER.md).
+//! `kiln-scheduler`: the heart of Kiln (docs/SCHEDULER.md).
 //!
 //! Turns approved plans into Builder → QA → Reviewer pipelines, enforces
 //! capacity and fairness, survives restarts and feeds memory.
@@ -21,7 +21,7 @@
 //! All loops are tokio tasks that stop on [`Scheduler::shutdown`]; no state
 //! lives only in memory — everything needed to resume is in SQLite or the
 //! run folder, so a daemon restart mid-run loses no task state, events or
-//! transcripts (PRD §13).
+//! transcripts.
 
 mod actions;
 mod config;

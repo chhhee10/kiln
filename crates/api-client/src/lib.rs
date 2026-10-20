@@ -206,7 +206,7 @@ impl Client {
         self.get("/info").await
     }
 
-    /// `info()` plus the version-match check (PRD §7.13).
+    /// `info()` plus the version-match check.
     pub async fn check_compatible(&self) -> Result<ServerInfo> {
         let info = self.info().await?;
         if !kiln_types::versions_compatible(kiln_types::VERSION, &info.version) {
