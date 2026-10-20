@@ -152,3 +152,40 @@ async fn exec_reports_exit_code_and_output() {
     rt.stop(&id, Duration::from_secs(1)).await.unwrap();
     rt.remove(&id).await.unwrap();
 }
+
+#[tokio::test]
+async fn builds_an_extras_image_on_top_of_a_base() {
+    if !enabled() {
+        return;
+    }
+    let rt = DockerRuntime::connect().await.expect("docker");
+    rt.ensure_image("alpine:latest").await.unwrap();
+    let base_id = rt
+        .image_id("alpine:latest")
+        .await
+        .unwrap()
+        .expect("alpine id");
+    let tag = format!("kiln-test-extras:{}", std::process::id());
+    assert_eq!(rt.image_id(&tag).await.unwrap(), None);
+    let df = "ARG BASE_IMAGE\nFROM ${BASE_IMAGE}\nRUN echo built > /extras.txt\n";
+    rt.build_image(&tag, df, &[("BASE_IMAGE".into(), "alpine:latest".into())])
+        .await
+        .unwrap();
+    let id = rt.image_id(&tag).await.unwrap().expect("built image");
+    assert_ne!(id, base_id);
+    let mut spec = ContainerSpec::new(unique("kiln-extras"), &tag);
+    spec.cmd = vec!["cat".into(), "/extras.txt".into()];
+    let c = rt.create(&spec).await.unwrap();
+    rt.start(&c).await.unwrap();
+    assert_eq!(rt.wait(&c).await.unwrap(), 0);
+    assert!(rt.logs_tail(&c, 5).await.unwrap().contains("built"));
+    rt.remove(&c).await.unwrap();
+    let bad = rt
+        .build_image(&tag, "FROM alpine:latest\nRUN exit 7\n", &[])
+        .await;
+    assert!(bad.is_err());
+    std::process::Command::new("docker")
+        .args(["rmi", "-f", &tag])
+        .output()
+        .ok();
+}

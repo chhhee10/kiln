@@ -16,12 +16,14 @@
 
 mod docker;
 mod error;
+mod extras;
 mod mounts;
 mod process;
 mod spec;
 
 pub use docker::DockerRuntime;
 pub use error::{Result, SandboxError};
+pub use extras::{EXTRAS_REPO, EXTRAS_TEMPLATE, extras_tag, render_extras};
 pub use mounts::{TRANSCRIPT_DIRS, mounts_for, prepare_run_dir, transcript_mounts};
 pub use process::ProcessRuntime;
 pub use spec::*;
@@ -59,4 +61,13 @@ pub trait Runtime: Send + Sync {
     async fn logs_tail(&self, id: &str, lines: usize) -> Result<String>;
     /// Run `cmd` inside a running container and wait for it (healthchecks).
     async fn exec(&self, id: &str, cmd: &[String]) -> Result<ExecOutput>;
+    /// The local image's id, or `None` when it isn't present (no pull).
+    async fn image_id(&self, image: &str) -> Result<Option<String>>;
+    /// Build `tag` from a single Dockerfile with an empty context.
+    async fn build_image(
+        &self,
+        tag: &str,
+        dockerfile: &str,
+        build_args: &[(String, String)],
+    ) -> Result<()>;
 }

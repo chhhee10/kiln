@@ -64,9 +64,8 @@ yet verified: real Claude/Codex sessions, the Tauri shell builds (needs
 WebKitGTK / Android SDK), native Android push & speech, LanceDB/fastembed at
 runtime, GitHub App against real GitHub.
 
-Known gaps: QA sidecar healthchecks (the runtime has no exec yet), building
-`qa.yaml: extras` images, encrypted push payloads, and `--dev` choosing Docker
-even when the worker image is missing (use `KILN_RUNTIME=process` meanwhile).
+Known gaps: encrypted push payloads. In `--dev`, the daemon falls back to the
+process runtime (no isolation) when Docker or the worker image is missing.
 
 ## License
 

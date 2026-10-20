@@ -177,6 +177,15 @@ pub async fn connect_runtime(cfg: &Config, dev: bool) -> Result<(Arc<dyn Runtime
                 Err(e) => Err(e),
             };
             match docker {
+                Ok(d) if dev && !d.has_image(&cfg.runtime.worker_image).await => {
+                    tracing::warn!(
+                        image = %cfg.runtime.worker_image,
+                        "worker image not built; --dev falls back to the process runtime (NO isolation). \
+                         Build it with: docker build -f images/worker/Dockerfile -t {} .",
+                        cfg.runtime.worker_image
+                    );
+                    Ok((Arc::new(ProcessRuntime::new()), true))
+                }
                 Ok(d) => Ok((Arc::new(d), false)),
                 Err(e) if dev => {
                     tracing::warn!(error = %e, "container runtime unreachable; --dev falls back to the process runtime (NO isolation)");

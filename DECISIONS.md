@@ -47,5 +47,7 @@ Made autonomously on 2026-10-19 to unblock the build. Each one is reversible; th
 - **Feedback on an escalated task** grants exactly one more Builder attempt; it doesn't reset the whole loop budget.
 - **Git:** mutating git operations (mirror, worktree add/remove, push) shell out to the `git` CLI because gix's worktree/push support is incomplete; gix is used for reads where convenient. Credentials reach git through `GIT_ASKPASS`/env, never argv.
 - **Distillation cost:** heuristic distill (L0→L1→L2) runs after every run; the LLM Distiller session (owner's key) runs once per attempt, after the Reviewer, plus on runs of tasks that ended Escalated/Failed. Distilling every Builder/QA/Reviewer run would roughly double model spend.
+- **QA service healthchecks** run `sh -c <healthcheck>` inside the service via the runtime's exec, every second for up to 120 s; a service that exits or never turns healthy fails the QA run with its last output.
+- **Extras images** are built by the daemon on first use (`kiln/worker-extras:<project>-<hash of base image id + lists>`), one build at a time, and reused afterwards. A build failure fails the run with the build log tail.
 - **Container ownership:** every container carries a `kiln.instance` label (hash of the data dir); cleanup only touches this daemon's own containers, so several daemons or test runs can share a Docker host.
 - **Commits:** the build is committed in milestones and pushed to the public repo https://github.com/chhhee10/kiln (`main`).

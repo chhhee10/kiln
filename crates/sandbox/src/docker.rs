@@ -11,10 +11,11 @@ use bollard::models::{
     Mount as DockerMount, MountType, NetworkCreateRequest, NetworkingConfig,
 };
 use bollard::query_parameters::{
-    CreateContainerOptions, CreateImageOptions, InspectContainerOptions, ListContainersOptions,
-    LogsOptions, RemoveContainerOptions, StatsOptions, StopContainerOptions, WaitContainerOptions,
+    BuildImageOptions, CreateContainerOptions, CreateImageOptions, InspectContainerOptions,
+    ListContainersOptions, LogsOptions, RemoveContainerOptions, StatsOptions, StopContainerOptions,
+    WaitContainerOptions,
 };
-use bollard::{API_DEFAULT_VERSION, Docker};
+use bollard::{API_DEFAULT_VERSION, Docker, body_full};
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -246,6 +247,13 @@ fn cpu_percent(s: &ContainerStatsResponse) -> f32 {
         0.0
     } else {
         (cpu_delta / sys_delta * cpus * 100.0) as f32
+    }
+}
+
+impl DockerRuntime {
+    /// Whether `image` is present locally (no pull).
+    pub async fn has_image(&self, image: &str) -> bool {
+        self.docker.inspect_image(image).await.is_ok()
     }
 }
 
@@ -531,6 +539,55 @@ impl Runtime for DockerRuntime {
             exit_code: info.exit_code.unwrap_or(-1),
             output,
         })
+    }
+    async fn image_id(&self, image: &str) -> Result<Option<String>> {
+        match self.docker.inspect_image(image).await {
+            Ok(i) => Ok(i.id),
+            Err(e) if status_code(&e) == Some(404) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    async fn build_image(
+        &self,
+        tag: &str,
+        dockerfile: &str,
+        build_args: &[(String, String)],
+    ) -> Result<()> {
+        let opts = BuildImageOptions {
+            dockerfile: "Dockerfile".into(),
+            t: Some(tag.into()),
+            rm: true,
+            forcerm: true,
+            buildargs: Some(build_args.iter().cloned().collect()),
+            labels: Some(HashMap::from([(
+                LABEL_MANAGED.to_string(),
+                "1".to_string(),
+            )])),
+            ..Default::default()
+        };
+        let tar = crate::extras::tar_one("Dockerfile", dockerfile.as_bytes());
+        tracing::info!(tag, "building image");
+        let mut stream = self
+            .docker
+            .build_image(opts, None, Some(body_full(tar.into())));
+        let mut tail: Vec<String> = Vec::new();
+        while let Some(item) = stream.next().await {
+            let info = item.map_err(|e| SandboxError::Unavailable(format!("build {tag}: {e}")))?;
+            if let Some(err) = info.error_detail.and_then(|d| d.message) {
+                return Err(SandboxError::Unavailable(format!(
+                    "build {tag}: {err}\n{}",
+                    tail.join("")
+                )));
+            }
+            if let Some(line) = info.stream {
+                tail.push(line);
+                if tail.len() > 30 {
+                    tail.remove(0);
+                }
+            }
+        }
+        Ok(())
     }
 }
 

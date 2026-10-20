@@ -414,6 +414,20 @@ impl Env {
         }
     }
 
+    /// Wait until the task has entered `want` more than `seen` times. Unlike
+    /// [`Env::wait_state`] this can't miss a short-lived state between polls.
+    pub async fn wait_entered(&self, id: TaskId, want: TaskState, seen: usize, timeout: Duration) {
+        self.wait_until(&format!("entered {want:?}"), timeout, || async {
+            self.transitions(id)
+                .await
+                .iter()
+                .filter(|t| t.1 == want)
+                .count()
+                > seen
+        })
+        .await;
+    }
+
     pub async fn transitions(&self, id: TaskId) -> Vec<(TaskState, TaskState)> {
         self.store
             .list_transitions(id)

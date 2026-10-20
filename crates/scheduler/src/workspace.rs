@@ -109,15 +109,14 @@ impl Scheduler {
         let image = match profile.as_ref().and_then(|p| p.image.clone()) {
             Some(i) => i,
             None => {
-                if profile.as_ref().is_some_and(|p| !p.extras.is_empty()) {
-                    // Building `kiln-extras:<hash>` needs an image-build API the
-                    // runtime trait doesn't have yet; fall back to the base image.
-                    tracing::warn!(project = %project.key, "qa.yaml extras are not built yet; using the base image");
-                }
-                project
+                let base = project
                     .image
                     .clone()
-                    .unwrap_or_else(|| self.cfg.worker_image.clone())
+                    .unwrap_or_else(|| self.cfg.worker_image.clone());
+                match profile.as_ref().filter(|p| !p.extras.is_empty()) {
+                    Some(p) => self.extras_image(project, &base, &p.extras).await?,
+                    None => base,
+                }
             }
         };
         Ok(Prepared {
@@ -126,6 +125,34 @@ impl Scheduler {
             profile,
             image,
         })
+    }
+
+    /// The base image with `qa.yaml: extras` layered on, built on first use
+    /// and reused while the base image and the lists are unchanged.
+    async fn extras_image(
+        &self,
+        project: &Project,
+        base: &str,
+        extras: &kiln_types::qa::QaExtras,
+    ) -> Result<String> {
+        // One build at a time: concurrent tasks of a project want the same tag.
+        static BUILD: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+        let _guard = BUILD.lock().await;
+        self.runtime.ensure_image(base).await?;
+        let base_id = self
+            .runtime
+            .image_id(base)
+            .await?
+            .unwrap_or_else(|| base.to_string());
+        let tag = kiln_sandbox::extras_tag(&project.key, &base_id, extras);
+        if self.runtime.image_id(&tag).await?.is_none() {
+            tracing::info!(project = %project.key, %tag, "building qa.yaml extras image");
+            let dockerfile = kiln_sandbox::render_extras(kiln_sandbox::EXTRAS_TEMPLATE, extras);
+            self.runtime
+                .build_image(&tag, &dockerfile, &[("BASE_IMAGE".into(), base.into())])
+                .await?;
+        }
+        Ok(tag)
     }
 
     /// Write `AGENTS.md` and `CLAUDE.md` from the L3 pack for `role` into

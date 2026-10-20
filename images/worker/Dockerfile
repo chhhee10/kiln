@@ -16,6 +16,8 @@ WORKDIR /src
 # Only the manifests + sources cargo needs to resolve the workspace
 # (see Dockerfile.dockerignore for what is excluded from the context).
 COPY . .
+# Parallel rustc jobs (empty = all cores); `--build-arg CARGO_BUILD_JOBS=4` keeps a laptop cool.
+ARG CARGO_BUILD_JOBS
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/src/target-docker \
     CARGO_TARGET_DIR=/src/target-docker cargo build --release -p kiln-runner \

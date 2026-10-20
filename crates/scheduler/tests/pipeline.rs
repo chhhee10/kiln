@@ -343,6 +343,12 @@ async fn human_stop_retry_feedback_escalate() {
 
     // Feedback on Ready → Looping → (re-admitted) Building with the note.
     let note = "Please also handle the 429 case";
+    let building_so_far = env
+        .transitions(id)
+        .await
+        .iter()
+        .filter(|t| t.1 == TaskState::Building)
+        .count();
     let t2 = env
         .sched
         .task_action(
@@ -367,7 +373,8 @@ async fn human_stop_retry_feedback_escalate() {
     );
     let tr = env.transitions(id).await;
     assert!(tr.contains(&(TaskState::Ready, TaskState::Looping)));
-    env.wait_state(id, TaskState::Building, T).await;
+    env.wait_entered(id, TaskState::Building, building_so_far, T)
+        .await;
     env.wait_until("attempt-3 builder", T, || async {
         env.runs(id)
             .await

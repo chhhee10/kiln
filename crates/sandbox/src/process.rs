@@ -399,6 +399,14 @@ impl Runtime for ProcessRuntime {
             output,
         })
     }
+    /// Images mean nothing here: every image "exists" under its own name.
+    async fn image_id(&self, image: &str) -> Result<Option<String>> {
+        Ok(Some(image.to_string()))
+    }
+
+    async fn build_image(&self, _: &str, _: &str, _: &[(String, String)]) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[cfg(test)]
