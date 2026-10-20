@@ -6372,6 +6372,7 @@ dependencies = [
  "kiln-types",
  "kiln-vault",
  "libc",
+ "reqwest 0.13.5",
  "serde",
  "serde_json",
  "serde_norway",

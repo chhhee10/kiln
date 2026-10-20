@@ -123,3 +123,10 @@ keychain = true       # master key in the OS keychain; else <data_dir>/master.ke
 [log]
 level = "info"        # tracing filter, e.g. "kiln_daemon=debug,info"
 format = "pretty"     # or "json"
+
+# Prices (USD per million tokens) for harnesses that report tokens but not
+# cost, e.g. Codex. Runs through a LiteLLM credential are priced from the
+# gateway's /model/info automatically; list models here to override.
+# [prices."gpt-6.1-sol"]
+# input_per_mtok = 2.0
+# output_per_mtok = 10.0

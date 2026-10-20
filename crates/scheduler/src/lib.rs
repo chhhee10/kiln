@@ -96,6 +96,7 @@ pub struct Scheduler {
     pub(crate) st: state::State,
 }
 
+pub mod pricing;
 pub(crate) mod state;
 
 impl Scheduler {

@@ -9,6 +9,7 @@ license.workspace = true
 kiln-types.workspace = true
 kiln-store.workspace = true
 kiln-events.workspace = true
+reqwest.workspace = true
 kiln-auth.workspace = true
 kiln-vault.workspace = true
 kiln-notifier.workspace = true

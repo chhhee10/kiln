@@ -556,11 +556,13 @@ impl Scheduler {
             self.flush_l0(l).await;
         }
         let mut outcome = outcome;
-        if outcome.last_seq == 0
-            && let Ok(r) = self.store.get_run(run).await
-            && let Some(o) = self.read_outcome_file(r.id)
-        {
-            outcome.last_seq = o.last_seq;
+        if let Ok(r) = self.store.get_run(run).await {
+            if outcome.last_seq == 0
+                && let Some(o) = self.read_outcome_file(r.id)
+            {
+                outcome.last_seq = o.last_seq;
+            }
+            self.price_outcome(&r, &mut outcome).await;
         }
         let finished = match self.store.finish_run(run, state, &outcome).await {
             Ok(r) => Some(r),

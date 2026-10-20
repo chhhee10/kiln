@@ -134,6 +134,8 @@ pub struct SchedulerConfig {
     /// Per-harness options passed through as `RunConfig.options`
     /// (`harness id → key → value`).
     pub harness_options: BTreeMap<String, BTreeMap<String, String>>,
+    /// Model prices for harnesses that report tokens but not cost (`[prices]`).
+    pub prices: BTreeMap<String, crate::pricing::ModelPrice>,
     /// Fallback harness/model per role when neither the plan nor the user's
     /// settings choose one (the daemon's `[defaults]`).
     pub default_workers: BTreeMap<WorkerRole, WorkerChoice>,
@@ -174,6 +176,7 @@ impl Default for SchedulerConfig {
             tick: Duration::from_secs(2),
             llm_distill: true,
             harness_options: BTreeMap::new(),
+            prices: BTreeMap::new(),
             default_workers: BTreeMap::new(),
             public_url: None,
             run_retention_days: 30,

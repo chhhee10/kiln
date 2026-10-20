@@ -86,6 +86,10 @@ pub struct Config {
     pub push: PushConfig,
     pub vault: VaultConfig,
     pub log: LogConfig,
+    /// USD per million tokens, for harnesses that report tokens but not cost
+    /// (Codex). Models routed through a LiteLLM credential are priced from
+    /// the gateway's `/model/info` when not listed here.
+    pub prices: BTreeMap<String, kiln_scheduler::pricing::ModelPrice>,
 }
 
 impl Default for Config {
@@ -104,6 +108,7 @@ impl Default for Config {
             push: PushConfig::default(),
             vault: VaultConfig::default(),
             log: LogConfig::default(),
+            prices: BTreeMap::new(),
         }
     }
 }

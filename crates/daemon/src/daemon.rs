@@ -232,6 +232,7 @@ fn scheduler_config(
         },
         llm_distill: cfg.memory.llm_distill,
         harness_options: cfg.harness_options(),
+        prices: cfg.prices.clone(),
         default_workers: defaults.clone(),
         public_url: Some(public_url.to_string()),
         l0_retention_days: cfg.memory.retention_days,
