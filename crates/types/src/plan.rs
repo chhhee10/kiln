@@ -15,7 +15,10 @@ pub struct WorkerChoice {
 
 impl WorkerChoice {
     pub fn new(harness: impl Into<String>, model: impl Into<String>) -> Self {
-        Self { harness: harness.into(), model: model.into() }
+        Self {
+            harness: harness.into(),
+            model: model.into(),
+        }
     }
 }
 
@@ -36,10 +39,18 @@ impl PlanWorkers {
         }
     }
     /// Fill missing roles from the user's defaults.
-    pub fn resolve(&self, defaults: &BTreeMap<WorkerRole, WorkerChoice>) -> BTreeMap<WorkerRole, WorkerChoice> {
+    pub fn resolve(
+        &self,
+        defaults: &BTreeMap<WorkerRole, WorkerChoice>,
+    ) -> BTreeMap<WorkerRole, WorkerChoice> {
         WorkerRole::PIPELINE
             .into_iter()
-            .filter_map(|r| self.get(r).or_else(|| defaults.get(&r)).cloned().map(|c| (r, c)))
+            .filter_map(|r| {
+                self.get(r)
+                    .or_else(|| defaults.get(&r))
+                    .cloned()
+                    .map(|c| (r, c))
+            })
             .collect()
     }
 }
@@ -99,7 +110,12 @@ impl PlanSpec {
         }
         let mut ids = BTreeSet::new();
         for t in &self.tasks {
-            if t.id.is_empty() || !t.id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
+            if t.id.is_empty()
+                || !t
+                    .id
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+            {
                 return Err(PlanError::BadId(t.id.clone()));
             }
             if !ids.insert(t.id.as_str()) {
@@ -115,7 +131,10 @@ impl PlanSpec {
         for t in &self.tasks {
             for d in &t.depends_on {
                 if !ids.contains(d.as_str()) {
-                    return Err(PlanError::UnknownDependency { task: t.id.clone(), dep: d.clone() });
+                    return Err(PlanError::UnknownDependency {
+                        task: t.id.clone(),
+                        dep: d.clone(),
+                    });
                 }
             }
         }
@@ -124,7 +143,8 @@ impl PlanSpec {
 
     /// Task ids in dependency order (dependencies first).
     pub fn topo_order(&self) -> Result<Vec<String>, PlanError> {
-        let by_id: BTreeMap<&str, &TaskSpec> = self.tasks.iter().map(|t| (t.id.as_str(), t)).collect();
+        let by_id: BTreeMap<&str, &TaskSpec> =
+            self.tasks.iter().map(|t| (t.id.as_str(), t)).collect();
         let mut out = Vec::new();
         let mut state: BTreeMap<&str, u8> = BTreeMap::new(); // 1 = visiting, 2 = done
         fn visit<'a>(
@@ -206,18 +226,37 @@ mod tests {
 
     #[test]
     fn valid_plan_orders_deps() {
-        let p = PlanSpec { feature: "f".into(), description: "".into(), tasks: vec![t("t2", &["t1"]), t("t1", &[])] };
+        let p = PlanSpec {
+            feature: "f".into(),
+            description: "".into(),
+            tasks: vec![t("t2", &["t1"]), t("t1", &[])],
+        };
         p.validate().unwrap();
         assert_eq!(p.topo_order().unwrap(), vec!["t1", "t2"]);
     }
 
     #[test]
     fn rejects_cycles_and_unknown() {
-        let p = PlanSpec { feature: "f".into(), description: "".into(), tasks: vec![t("a", &["b"]), t("b", &["a"])] };
+        let p = PlanSpec {
+            feature: "f".into(),
+            description: "".into(),
+            tasks: vec![t("a", &["b"]), t("b", &["a"])],
+        };
         assert!(matches!(p.validate(), Err(PlanError::Cycle(_))));
-        let p = PlanSpec { feature: "f".into(), description: "".into(), tasks: vec![t("a", &["z"])] };
-        assert!(matches!(p.validate(), Err(PlanError::UnknownDependency { .. })));
-        let p = PlanSpec { feature: "f".into(), description: "".into(), tasks: vec![t("a", &[]), t("a", &[])] };
+        let p = PlanSpec {
+            feature: "f".into(),
+            description: "".into(),
+            tasks: vec![t("a", &["z"])],
+        };
+        assert!(matches!(
+            p.validate(),
+            Err(PlanError::UnknownDependency { .. })
+        ));
+        let p = PlanSpec {
+            feature: "f".into(),
+            description: "".into(),
+            tasks: vec![t("a", &[]), t("a", &[])],
+        };
         assert!(matches!(p.validate(), Err(PlanError::DuplicateId(_))));
     }
 

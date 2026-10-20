@@ -123,3 +123,29 @@ async fn rejects_bad_specs() {
     rt.create_network("n").await.unwrap();
     rt.remove_network("n").await.unwrap();
 }
+
+#[tokio::test]
+async fn exec_runs_in_the_container_context() {
+    let d = tmp();
+    let rt = ProcessRuntime::new();
+    let id = rt
+        .create(&sh("p-exec", "sleep 30", d.path()))
+        .await
+        .unwrap();
+    rt.start(&id).await.unwrap();
+    let cmd = |s: &str| vec!["sh".to_string(), "-c".to_string(), s.to_string()];
+    let ok = rt.exec(&id, &cmd("pwd; echo $KILN_SOCKET")).await.unwrap();
+    assert_eq!(ok.exit_code, 0);
+    assert!(
+        ok.output
+            .contains(&d.path().join("ws").display().to_string()),
+        "{}",
+        ok.output
+    );
+    assert!(ok.output.contains("run/kiln.sock"), "{}", ok.output);
+    let bad = rt.exec(&id, &cmd("echo nope >&2; exit 4")).await.unwrap();
+    assert_eq!(bad.exit_code, 4);
+    assert!(bad.output.contains("nope"));
+    assert!(rt.exec("missing", &cmd("true")).await.is_err());
+    rt.remove(&id).await.unwrap();
+}

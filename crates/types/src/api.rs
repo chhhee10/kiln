@@ -78,7 +78,10 @@ pub struct ApiError {
 
 impl ApiError {
     pub fn new(code: impl Into<String>, error: impl Into<String>) -> Self {
-        Self { code: code.into(), error: error.into() }
+        Self {
+            code: code.into(),
+            error: error.into(),
+        }
     }
 }
 
@@ -185,7 +188,10 @@ pub struct BoardResponse {
 pub enum TaskAction {
     Stop,
     Retry,
-    Escalate { #[serde(default)] note: Option<String> },
+    Escalate {
+        #[serde(default)]
+        note: Option<String>,
+    },
     Feedback {
         text: String,
         #[serde(default = "yes")]
@@ -464,10 +470,16 @@ mod tests {
 
     #[test]
     fn task_action_wire() {
-        let a: TaskActionRequest = serde_json::from_str(r#"{"action":"feedback","text":"fix it"}"#).unwrap();
+        let a: TaskActionRequest =
+            serde_json::from_str(r#"{"action":"feedback","text":"fix it"}"#).unwrap();
         assert_eq!(
             a.action,
-            TaskAction::Feedback { text: "fix it".into(), attach_qa: true, attach_verdict: true, save_memory: false }
+            TaskAction::Feedback {
+                text: "fix it".into(),
+                attach_qa: true,
+                attach_verdict: true,
+                save_memory: false
+            }
         );
         let a: TaskActionRequest = serde_json::from_str(r#"{"action":"retry"}"#).unwrap();
         assert_eq!(a.action, TaskAction::Retry);

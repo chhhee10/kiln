@@ -374,6 +374,31 @@ impl Runtime for ProcessRuntime {
         }
         Ok(out)
     }
+
+    async fn exec(&self, id: &str, cmd: &[String]) -> Result<ExecOutput> {
+        let spec = self.with_proc(id, |p| p.spec.clone())?;
+        let Some(prog) = cmd.first() else {
+            return Err(SandboxError::InvalidSpec("empty exec command".into()));
+        };
+        let mounts = &spec.mounts;
+        let mut c = Command::new(map_path(prog, mounts));
+        c.args(cmd[1..].iter().map(|a| map_path(a, mounts)));
+        for (k, v) in &spec.env {
+            c.env(k, map_path(v, mounts));
+        }
+        let ws = host_of(mounts, paths::WORKSPACE);
+        if let Some(wd) = spec.workdir.as_deref().map(|w| map_path(w, mounts)).or(ws) {
+            c.current_dir(wd);
+        }
+        c.stdin(Stdio::null());
+        let out = c.output().await?;
+        let mut output = String::from_utf8_lossy(&out.stdout).into_owned();
+        output.push_str(&String::from_utf8_lossy(&out.stderr));
+        Ok(ExecOutput {
+            exit_code: exit_code(out.status),
+            output,
+        })
+    }
 }
 
 #[cfg(test)]

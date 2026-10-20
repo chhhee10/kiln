@@ -57,4 +57,6 @@ pub trait Runtime: Send + Sync {
     async fn remove_network(&self, name: &str) -> Result<()>;
     /// The last `lines` lines of combined stdout/stderr.
     async fn logs_tail(&self, id: &str, lines: usize) -> Result<String>;
+    /// Run `cmd` inside a running container and wait for it (healthchecks).
+    async fn exec(&self, id: &str, cmd: &[String]) -> Result<ExecOutput>;
 }

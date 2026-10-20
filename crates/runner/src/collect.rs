@@ -512,7 +512,10 @@ mod tests {
             ArtifactKind::QaReport
         );
         assert_eq!(artifact_kind(Path::new("x.patch")), ArtifactKind::Diff);
-        assert_eq!(artifact_kind(Path::new("out/artifacts/diff.json")), ArtifactKind::Diff);
+        assert_eq!(
+            artifact_kind(Path::new("out/artifacts/diff.json")),
+            ArtifactKind::Diff
+        );
         assert_eq!(artifact_kind(Path::new("server.log")), ArtifactKind::Log);
         assert_eq!(artifact_kind(Path::new("noext")), ArtifactKind::Other);
     }

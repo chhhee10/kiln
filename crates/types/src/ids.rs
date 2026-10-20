@@ -34,6 +34,19 @@ macro_rules! id_type {
 }
 
 id_type!(
-    UserId, SessionId, DeviceId, ProjectId, PlanId, TaskId, RunId, ArtifactId, MemoryId,
-    EpisodeId, CredentialId, NotificationId, ThreadId, MessageId, JobId,
+    UserId,
+    SessionId,
+    DeviceId,
+    ProjectId,
+    PlanId,
+    TaskId,
+    RunId,
+    ArtifactId,
+    MemoryId,
+    EpisodeId,
+    CredentialId,
+    NotificationId,
+    ThreadId,
+    MessageId,
+    JobId,
 );

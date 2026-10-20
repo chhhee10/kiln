@@ -39,6 +39,9 @@ const DEADLINE_MARGIN: Duration = Duration::from_secs(30);
 const EXIT_AFTER_COMPLETE: Duration = Duration::from_secs(15);
 /// After the container exits, wait this long for a late `Complete`.
 const COMPLETE_AFTER_EXIT: Duration = Duration::from_secs(3);
+/// How long a QA service may take to pass its `healthcheck`.
+const SERVICE_HEALTH_TIMEOUT: Duration = Duration::from_secs(120);
+const SERVICE_HEALTH_POLL: Duration = Duration::from_secs(1);
 
 /// What to launch for one run.
 pub(crate) struct LaunchSpec {
@@ -194,6 +197,33 @@ impl Scheduler {
         }
     }
 
+    /// Run a QA service's `healthcheck` (via `sh -c`) until it exits 0.
+    async fn await_healthy(&self, name: &str, id: &str, check: &str) -> Result<()> {
+        let cmd = vec!["sh".to_string(), "-c".to_string(), check.to_string()];
+        let deadline = Instant::now() + SERVICE_HEALTH_TIMEOUT;
+        loop {
+            let last = match self.runtime.exec(id, &cmd).await {
+                Ok(o) if o.exit_code == 0 => return Ok(()),
+                Ok(o) => o.output,
+                Err(e) => e.to_string(),
+            };
+            if !self.runtime.is_running(id).await.unwrap_or(false) {
+                let logs = self.runtime.logs_tail(id, 20).await.unwrap_or_default();
+                return Err(SchedulerError::Invalid(format!(
+                    "QA service `{name}` exited before becoming healthy:\n{logs}"
+                )));
+            }
+            if Instant::now() >= deadline {
+                return Err(SchedulerError::Invalid(format!(
+                    "QA service `{name}` not healthy after {}s; last check said: {}",
+                    SERVICE_HEALTH_TIMEOUT.as_secs(),
+                    last.trim()
+                )));
+            }
+            tokio::time::sleep(SERVICE_HEALTH_POLL).await;
+        }
+    }
+
     async fn launch_inner(self: &Arc<Self>, run: &Run, spec: &LaunchSpec) -> Result<()> {
         let run_dir = self.run_dir(run.id);
         prepare_run_dir(&run_dir)?;
@@ -259,9 +289,15 @@ impl Scheduler {
                 write_json(&run_dir.join("meta.json"), &meta)?;
                 self.runtime.start(&id).await?;
             }
-            // The runtime API has no exec, so `healthcheck` commands can't be
-            // run here; give services a moment and let QA's `boot` steps wait.
-            tokio::time::sleep(Duration::from_secs(2)).await;
+            let ids = meta.sidecars.clone();
+            for ((name, svc), id) in spec.services.iter().zip(&ids) {
+                match &svc.healthcheck {
+                    Some(check) => self.await_healthy(name, id, check).await?,
+                    // No check declared: give it a moment; QA's `boot` steps
+                    // can still wait on the port.
+                    None => tokio::time::sleep(Duration::from_secs(2)).await,
+                }
+            }
             network = NetworkMode::Named(net);
         }
 

@@ -71,9 +71,16 @@ impl MemoryType {
         }
     }
     pub fn parse(s: &str) -> Option<Self> {
-        [Self::Fact, Self::Convention, Self::Decision, Self::Procedure, Self::Preference, Self::Episode]
-            .into_iter()
-            .find(|t| t.as_str() == s)
+        [
+            Self::Fact,
+            Self::Convention,
+            Self::Decision,
+            Self::Procedure,
+            Self::Preference,
+            Self::Episode,
+        ]
+        .into_iter()
+        .find(|t| t.as_str() == s)
     }
 }
 
@@ -104,9 +111,16 @@ impl MemoryStatus {
         }
     }
     pub fn parse(s: &str) -> Option<Self> {
-        [Self::Active, Self::Pending, Self::Flagged, Self::Superseded, Self::Archived, Self::Rejected]
-            .into_iter()
-            .find(|t| t.as_str() == s)
+        [
+            Self::Active,
+            Self::Pending,
+            Self::Flagged,
+            Self::Superseded,
+            Self::Archived,
+            Self::Rejected,
+        ]
+        .into_iter()
+        .find(|t| t.as_str() == s)
     }
 }
 
@@ -231,7 +245,13 @@ mod tests {
     use super::*;
     use chrono::Utc;
 
-    fn item(owner: UserId, vis: Visibility, kind: MemoryType, status: MemoryStatus, shared: Vec<UserId>) -> MemoryItem {
+    fn item(
+        owner: UserId,
+        vis: Visibility,
+        kind: MemoryType,
+        status: MemoryStatus,
+        shared: Vec<UserId>,
+    ) -> MemoryItem {
         MemoryItem {
             id: MemoryId::new(),
             owner_id: owner,

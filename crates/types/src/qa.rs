@@ -73,7 +73,10 @@ fn default_memory() -> String {
 
 impl Default for QaResources {
     fn default() -> Self {
-        Self { cpus: default_cpus(), memory: default_memory() }
+        Self {
+            cpus: default_cpus(),
+            memory: default_memory(),
+        }
     }
 }
 
@@ -257,7 +260,12 @@ mod tests {
     #[test]
     fn report_pass_logic() {
         let mut r = QaReport {
-            criteria: vec![CriterionResult { criterion: "a".into(), status: PassFail::Pass, evidence: vec![], notes: "".into() }],
+            criteria: vec![CriterionResult {
+                criterion: "a".into(),
+                status: PassFail::Pass,
+                evidence: vec![],
+                notes: "".into(),
+            }],
             tests: TestSummary::default(),
             summary: "".into(),
             test_branch: None,

@@ -19,13 +19,27 @@ pub enum Event {
     /// Forwarded to clients (after per-user filtering).
     Server(ServerEvent),
     /// Internal: a task changed state (already persisted).
-    TaskTransitioned { task_id: TaskId, owner_id: UserId, from: TaskState, to: TaskState },
+    TaskTransitioned {
+        task_id: TaskId,
+        owner_id: UserId,
+        from: TaskState,
+        to: TaskState,
+    },
     /// Internal: a run finished and its outcome is persisted.
-    RunFinished { run_id: RunId, task_id: Option<TaskId>, owner_id: UserId, role: WorkerRole, success: bool },
+    RunFinished {
+        run_id: RunId,
+        task_id: Option<TaskId>,
+        owner_id: UserId,
+        role: WorkerRole,
+        success: bool,
+    },
     /// Internal: a run's events are fully flushed to L0 (`runs.ingested = 1`).
     RunIngested { run_id: RunId, owner_id: UserId },
     /// Internal: L2 changed for this owner/project; L3 packs need a rebuild.
-    MemoryChanged { owner_id: UserId, project_id: Option<ProjectId> },
+    MemoryChanged {
+        owner_id: UserId,
+        project_id: Option<ProjectId>,
+    },
     /// Internal: a scheduler slot freed up or new work arrived.
     SchedulerWake,
     /// Internal: daemon is shutting down.
@@ -54,7 +68,9 @@ impl Bus {
     }
 
     pub fn subscribe(&self) -> Subscription {
-        Subscription { rx: self.tx.subscribe() }
+        Subscription {
+            rx: self.tx.subscribe(),
+        }
     }
 
     pub fn subscriber_count(&self) -> usize {

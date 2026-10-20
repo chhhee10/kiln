@@ -215,7 +215,12 @@ impl TaskState {
             TaskState::Ready => BoardColumn::Ready,
             TaskState::Merged => BoardColumn::Done,
             TaskState::Escalated | TaskState::Failed | TaskState::Cancelled => match last_active {
-                Some(s) if !matches!(s, TaskState::Escalated | TaskState::Failed | TaskState::Cancelled) => {
+                Some(s)
+                    if !matches!(
+                        s,
+                        TaskState::Escalated | TaskState::Failed | TaskState::Cancelled
+                    ) =>
+                {
                     s.column(None)
                 }
                 _ => BoardColumn::Planned,
@@ -298,7 +303,10 @@ impl RunState {
         .find(|r| r.as_str() == s)
     }
     pub fn is_finished(self) -> bool {
-        !matches!(self, RunState::Pending | RunState::Starting | RunState::Running)
+        !matches!(
+            self,
+            RunState::Pending | RunState::Starting | RunState::Running
+        )
     }
     pub fn status(self) -> Status {
         match self {
@@ -324,7 +332,8 @@ pub enum WorkerRole {
 }
 
 impl WorkerRole {
-    pub const PIPELINE: [WorkerRole; 3] = [WorkerRole::Builder, WorkerRole::Qa, WorkerRole::Reviewer];
+    pub const PIPELINE: [WorkerRole; 3] =
+        [WorkerRole::Builder, WorkerRole::Qa, WorkerRole::Reviewer];
 
     pub fn as_str(self) -> &'static str {
         match self {
@@ -377,7 +386,9 @@ mod tests {
     #[test]
     fn happy_path_transitions() {
         use TaskState::*;
-        let path = [Queued, Preparing, Building, Testing, Reviewing, Ready, Merged];
+        let path = [
+            Queued, Preparing, Building, Testing, Reviewing, Ready, Merged,
+        ];
         for w in path.windows(2) {
             assert!(w[0].can_transition(w[1]), "{:?} -> {:?}", w[0], w[1]);
         }

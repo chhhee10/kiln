@@ -207,6 +207,14 @@ pub struct ContainerStats {
     pub pids: u64,
 }
 
+/// Result of running a command inside a container.
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+pub struct ExecOutput {
+    pub exit_code: i64,
+    /// Combined stdout/stderr.
+    pub output: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

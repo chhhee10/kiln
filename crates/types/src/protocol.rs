@@ -51,35 +51,70 @@ pub mod paths {
 #[serde(tag = "type", rename_all = "snake_case")]
 #[allow(clippy::large_enum_variant)] // sent once per line; boxing buys nothing
 pub enum RunnerMessage {
-    Hello { run_id: RunId, token: String, runner_version: String, protocol: u32 },
-    Event { event: RunEvent },
+    Hello {
+        run_id: RunId,
+        token: String,
+        runner_version: String,
+        protocol: u32,
+    },
+    Event {
+        event: RunEvent,
+    },
     /// A file under `/run/kiln/out/artifacts` is ready to index.
-    Artifact { path: String, kind: ArtifactKind, caption: Option<String>, size: u64 },
+    Artifact {
+        path: String,
+        kind: ArtifactKind,
+        caption: Option<String>,
+        size: u64,
+    },
     /// Memory MCP call proxied to the daemon's gateway.
-    MemoryRequest { req_id: u64, call: MemoryCall },
+    MemoryRequest {
+        req_id: u64,
+        call: MemoryCall,
+    },
     Heartbeat,
-    Complete { outcome: RunOutcome },
+    Complete {
+        outcome: RunOutcome,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum DaemonMessage {
-    Welcome { config: Box<RunConfig> },
-    Ack { seq: u64 },
+    Welcome {
+        config: Box<RunConfig>,
+    },
+    Ack {
+        seq: u64,
+    },
     /// Stop the harness (SIGTERM, then SIGKILL after the grace period).
-    Stop { reason: String },
+    Stop {
+        reason: String,
+    },
     /// Human feedback to inject into a live Builder session, if the harness
     /// supports it. Otherwise the daemon restarts the run with feedback.
-    Feedback { text: String },
-    MemoryResponse { req_id: u64, result: Result<serde_json::Value, String> },
-    Reject { reason: String },
+    Feedback {
+        text: String,
+    },
+    MemoryResponse {
+        req_id: u64,
+        result: Result<serde_json::Value, String>,
+    },
+    Reject {
+        reason: String,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "method", content = "params", rename_all = "snake_case")]
 pub enum MemoryCall {
-    SearchMemory { query: String, limit: Option<u32> },
-    ProposeMemory { proposal: crate::memory::MemoryProposal },
+    SearchMemory {
+        query: String,
+        limit: Option<u32>,
+    },
+    ProposeMemory {
+        proposal: crate::memory::MemoryProposal,
+    },
 }
 
 /// Everything the runner needs to drive one harness session.
@@ -163,15 +198,22 @@ mod tests {
     fn wire_roundtrip() {
         let m = RunnerMessage::MemoryRequest {
             req_id: 7,
-            call: MemoryCall::SearchMemory { query: "retry".into(), limit: Some(5) },
+            call: MemoryCall::SearchMemory {
+                query: "retry".into(),
+                limit: Some(5),
+            },
         };
         let s = serde_json::to_string(&m).unwrap();
         assert!(s.contains("\"type\":\"memory_request\""));
         assert!(s.contains("\"method\":\"search_memory\""));
         let back: RunnerMessage = serde_json::from_str(&s).unwrap();
         assert_eq!(back, m);
-        let d = DaemonMessage::MemoryResponse { req_id: 7, result: Err("nope".into()) };
-        let back: DaemonMessage = serde_json::from_str(&serde_json::to_string(&d).unwrap()).unwrap();
+        let d = DaemonMessage::MemoryResponse {
+            req_id: 7,
+            result: Err("nope".into()),
+        };
+        let back: DaemonMessage =
+            serde_json::from_str(&serde_json::to_string(&d).unwrap()).unwrap();
         assert_eq!(back, d);
     }
 }

@@ -39,7 +39,11 @@ pub struct UserLimits {
 
 impl Default for UserLimits {
     fn default() -> Self {
-        Self { concurrency: 2, ram_share: 0.5, monthly_budget_usd: 200.0 }
+        Self {
+            concurrency: 2,
+            ram_share: 0.5,
+            monthly_budget_usd: 200.0,
+        }
     }
 }
 
@@ -91,7 +95,10 @@ pub struct ResourceProfile {
 
 impl Default for ResourceProfile {
     fn default() -> Self {
-        Self { cpus: 2.0, memory_mb: 4096 }
+        Self {
+            cpus: 2.0,
+            memory_mb: 4096,
+        }
     }
 }
 
@@ -341,7 +348,12 @@ pub struct UserSummary {
 
 impl From<&User> for UserSummary {
     fn from(u: &User) -> Self {
-        Self { id: u.id, name: u.name.clone(), email: u.email.clone(), initials: u.initials.clone() }
+        Self {
+            id: u.id,
+            name: u.name.clone(),
+            email: u.email.clone(),
+            initials: u.initials.clone(),
+        }
     }
 }
 
@@ -366,7 +378,9 @@ impl CredentialKind {
     pub fn label(self) -> &'static str {
         match self {
             CredentialKind::ClaudeOauth => "OAuth",
-            CredentialKind::AnthropicApiKey | CredentialKind::OpenaiApiKey | CredentialKind::Other => "API key",
+            CredentialKind::AnthropicApiKey
+            | CredentialKind::OpenaiApiKey
+            | CredentialKind::Other => "API key",
             CredentialKind::Litellm => "URL + key",
         }
     }
@@ -445,10 +459,12 @@ pub enum NotificationKind {
 impl NotificationKind {
     pub fn channel(self) -> NotificationChannel {
         match self {
-            NotificationKind::PlanReady | NotificationKind::TaskEscalated | NotificationKind::MemoryApproval => {
-                NotificationChannel::Decisions
+            NotificationKind::PlanReady
+            | NotificationKind::TaskEscalated
+            | NotificationKind::MemoryApproval => NotificationChannel::Decisions,
+            NotificationKind::TaskFailed | NotificationKind::SystemAlert => {
+                NotificationChannel::Failures
             }
-            NotificationKind::TaskFailed | NotificationKind::SystemAlert => NotificationChannel::Failures,
             NotificationKind::TaskReady => NotificationChannel::ReadyForReview,
             NotificationKind::WorkersLive => NotificationChannel::LiveWorkers,
         }

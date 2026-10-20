@@ -29,7 +29,9 @@ pub enum ClientError {
     Http(String),
     #[error("unexpected response: {0}")]
     Decode(String),
-    #[error("client {client} is not compatible with daemon {server}; download a matching build from /download")]
+    #[error(
+        "client {client} is not compatible with daemon {server}; download a matching build from /download"
+    )]
     Incompatible { client: String, server: String },
 }
 
@@ -47,7 +49,11 @@ impl ClientError {
 
 impl From<reqwest::Error> for ClientError {
     fn from(e: reqwest::Error) -> Self {
-        if e.is_decode() { ClientError::Decode(e.to_string()) } else { ClientError::Http(e.to_string()) }
+        if e.is_decode() {
+            ClientError::Decode(e.to_string())
+        } else {
+            ClientError::Http(e.to_string())
+        }
     }
 }
 
@@ -67,7 +73,11 @@ impl Client {
         let base = base.into().trim_end_matches('/').to_string();
         // reqwest on wasm needs absolute URLs: "" means the page's own origin.
         #[cfg(target_arch = "wasm32")]
-        let base = if base.is_empty() { ws::same_origin() } else { base };
+        let base = if base.is_empty() {
+            ws::same_origin()
+        } else {
+            base
+        };
         #[cfg(not(target_arch = "wasm32"))]
         let http = reqwest::Client::builder()
             .user_agent(format!("kiln-client/{}", kiln_types::VERSION))
@@ -76,7 +86,11 @@ impl Client {
             .unwrap_or_default();
         #[cfg(target_arch = "wasm32")]
         let http = reqwest::Client::new();
-        Self { base, http, token: Arc::new(RwLock::new(None)) }
+        Self {
+            base,
+            http,
+            token: Arc::new(RwLock::new(None)),
+        }
     }
 
     pub fn with_token(self, token: impl Into<String>) -> Self {
@@ -119,17 +133,27 @@ impl Client {
         let status = resp.status().as_u16();
         if (200..300).contains(&status) {
             if status == 204 {
-                return serde_json::from_str("null").map_err(|e| ClientError::Decode(e.to_string()));
+                return serde_json::from_str("null")
+                    .map_err(|e| ClientError::Decode(e.to_string()));
             }
             let bytes = resp.bytes().await?;
             if bytes.is_empty() {
-                return serde_json::from_str("null").map_err(|e| ClientError::Decode(e.to_string()));
+                return serde_json::from_str("null")
+                    .map_err(|e| ClientError::Decode(e.to_string()));
             }
             serde_json::from_slice(&bytes).map_err(|e| ClientError::Decode(e.to_string()))
         } else {
             let text = resp.text().await.unwrap_or_default();
-            let error = serde_json::from_str::<ApiError>(&text)
-                .unwrap_or_else(|_| ApiError::new("http", if text.is_empty() { format!("HTTP {status}") } else { text }));
+            let error = serde_json::from_str::<ApiError>(&text).unwrap_or_else(|_| {
+                ApiError::new(
+                    "http",
+                    if text.is_empty() {
+                        format!("HTTP {status}")
+                    } else {
+                        text
+                    },
+                )
+            });
             Err(ClientError::Api { status, error })
         }
     }
@@ -137,20 +161,40 @@ impl Client {
     async fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
         self.send(self.req(reqwest::Method::GET, path)).await
     }
-    async fn get_q<T: DeserializeOwned, Q: Serialize + ?Sized>(&self, path: &str, q: &Q) -> Result<T> {
-        self.send(self.req(reqwest::Method::GET, path).query(q)).await
+    async fn get_q<T: DeserializeOwned, Q: Serialize + ?Sized>(
+        &self,
+        path: &str,
+        q: &Q,
+    ) -> Result<T> {
+        self.send(self.req(reqwest::Method::GET, path).query(q))
+            .await
     }
-    async fn post<T: DeserializeOwned, B: Serialize + ?Sized>(&self, path: &str, body: &B) -> Result<T> {
-        self.send(self.req(reqwest::Method::POST, path).json(body)).await
+    async fn post<T: DeserializeOwned, B: Serialize + ?Sized>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> Result<T> {
+        self.send(self.req(reqwest::Method::POST, path).json(body))
+            .await
     }
     async fn post_empty<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
         self.send(self.req(reqwest::Method::POST, path)).await
     }
-    async fn put<T: DeserializeOwned, B: Serialize + ?Sized>(&self, path: &str, body: &B) -> Result<T> {
-        self.send(self.req(reqwest::Method::PUT, path).json(body)).await
+    async fn put<T: DeserializeOwned, B: Serialize + ?Sized>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> Result<T> {
+        self.send(self.req(reqwest::Method::PUT, path).json(body))
+            .await
     }
-    async fn patch<T: DeserializeOwned, B: Serialize + ?Sized>(&self, path: &str, body: &B) -> Result<T> {
-        self.send(self.req(reqwest::Method::PATCH, path).json(body)).await
+    async fn patch<T: DeserializeOwned, B: Serialize + ?Sized>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> Result<T> {
+        self.send(self.req(reqwest::Method::PATCH, path).json(body))
+            .await
     }
     async fn delete<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
         self.send(self.req(reqwest::Method::DELETE, path)).await
@@ -166,7 +210,10 @@ impl Client {
     pub async fn check_compatible(&self) -> Result<ServerInfo> {
         let info = self.info().await?;
         if !kiln_types::versions_compatible(kiln_types::VERSION, &info.version) {
-            return Err(ClientError::Incompatible { client: kiln_types::VERSION.into(), server: info.version });
+            return Err(ClientError::Incompatible {
+                client: kiln_types::VERSION.into(),
+                server: info.version,
+            });
         }
         Ok(info)
     }
@@ -224,7 +271,11 @@ impl Client {
     }
 
     pub async fn task_action(&self, id: TaskId, action: TaskAction) -> Result<Task> {
-        self.post(&format!("/tasks/{id}/action"), &TaskActionRequest { action }).await
+        self.post(
+            &format!("/tasks/{id}/action"),
+            &TaskActionRequest { action },
+        )
+        .await
     }
 
     pub async fn task_logs(&self, id: TaskId, q: &LogQuery) -> Result<Vec<LogLine>> {
@@ -237,11 +288,18 @@ impl Client {
     }
 
     pub async fn artifact_bytes(&self, run: RunId, artifact: ArtifactId) -> Result<Vec<u8>> {
-        let resp = self.req(reqwest::Method::GET, &format!("/runs/{run}/artifacts/{artifact}")).send().await?;
+        let resp = self
+            .req(
+                reqwest::Method::GET,
+                &format!("/runs/{run}/artifacts/{artifact}"),
+            )
+            .send()
+            .await?;
         let status = resp.status().as_u16();
         if !(200..300).contains(&status) {
             let text = resp.text().await.unwrap_or_default();
-            let error = serde_json::from_str(&text).unwrap_or_else(|_| ApiError::new("http", format!("HTTP {status}")));
+            let error = serde_json::from_str(&text)
+                .unwrap_or_else(|_| ApiError::new("http", format!("HTTP {status}")));
             return Err(ClientError::Api { status, error });
         }
         Ok(resp.bytes().await?.to_vec())
@@ -255,7 +313,11 @@ impl Client {
     pub async fn create_project(&self, req: &CreateProjectRequest) -> Result<Project> {
         self.post("/projects", req).await
     }
-    pub async fn update_project(&self, id: ProjectId, req: &UpdateProjectRequest) -> Result<Project> {
+    pub async fn update_project(
+        &self,
+        id: ProjectId,
+        req: &UpdateProjectRequest,
+    ) -> Result<Project> {
         self.patch(&format!("/projects/{id}"), req).await
     }
 
@@ -280,7 +342,11 @@ impl Client {
     pub async fn update_plan(&self, id: PlanId, req: &UpdatePlanRequest) -> Result<Plan> {
         self.put(&format!("/plans/{id}"), req).await
     }
-    pub async fn approve_plan(&self, id: PlanId, req: &ApprovePlanRequest) -> Result<ApprovePlanResponse> {
+    pub async fn approve_plan(
+        &self,
+        id: PlanId,
+        req: &ApprovePlanRequest,
+    ) -> Result<ApprovePlanResponse> {
         self.post(&format!("/plans/{id}/approve"), req).await
     }
 
@@ -292,10 +358,18 @@ impl Client {
     pub async fn memory_item(&self, id: MemoryId) -> Result<MemoryDetail> {
         self.get(&format!("/memory/{id}")).await
     }
-    pub async fn update_memory(&self, id: MemoryId, req: &UpdateMemoryRequest) -> Result<MemoryItem> {
+    pub async fn update_memory(
+        &self,
+        id: MemoryId,
+        req: &UpdateMemoryRequest,
+    ) -> Result<MemoryItem> {
         self.patch(&format!("/memory/{id}"), req).await
     }
-    pub async fn decide_memory(&self, id: MemoryId, req: &ApproveMemoryRequest) -> Result<MemoryItem> {
+    pub async fn decide_memory(
+        &self,
+        id: MemoryId,
+        req: &ApproveMemoryRequest,
+    ) -> Result<MemoryItem> {
         self.post(&format!("/memory/{id}/approve"), req).await
     }
 
@@ -307,7 +381,11 @@ impl Client {
     pub async fn add_credential(&self, req: &CreateCredentialRequest) -> Result<CredentialSummary> {
         self.post("/credentials", req).await
     }
-    pub async fn rotate_credential(&self, id: CredentialId, req: &RotateCredentialRequest) -> Result<CredentialSummary> {
+    pub async fn rotate_credential(
+        &self,
+        id: CredentialId,
+        req: &RotateCredentialRequest,
+    ) -> Result<CredentialSummary> {
         self.put(&format!("/credentials/{id}"), req).await
     }
     pub async fn revoke_credential(&self, id: CredentialId) -> Result<()> {
@@ -334,7 +412,11 @@ impl Client {
     pub async fn mark_notification_read(&self, id: NotificationId) -> Result<()> {
         self.post_empty(&format!("/notifications/{id}/read")).await
     }
-    pub async fn notification_action(&self, id: NotificationId, req: &NotificationActionRequest) -> Result<Notification> {
+    pub async fn notification_action(
+        &self,
+        id: NotificationId,
+        req: &NotificationActionRequest,
+    ) -> Result<Notification> {
         self.post(&format!("/notifications/{id}/action"), req).await
     }
     pub async fn machine(&self) -> Result<MachineStats> {
@@ -361,12 +443,20 @@ impl Client {
 
     /// WebSocket URL for live events (`ws://` / `wss://`).
     pub fn ws_url(&self) -> String {
-        let base = if self.base.is_empty() { ws::same_origin() } else { self.base.clone() };
-        let base = base.replacen("https://", "wss://", 1).replacen("http://", "ws://", 1);
+        let base = if self.base.is_empty() {
+            ws::same_origin()
+        } else {
+            self.base.clone()
+        };
+        let base = base
+            .replacen("https://", "wss://", 1)
+            .replacen("http://", "ws://", 1);
         match self.token() {
             // Browsers can't set headers on WebSocket; the cookie covers them.
             // Native clients pass the token as a query param over TLS.
-            Some(t) if cfg!(not(target_arch = "wasm32")) => format!("{base}{API_PREFIX}/ws?token={t}"),
+            Some(t) if cfg!(not(target_arch = "wasm32")) => {
+                format!("{base}{API_PREFIX}/ws?token={t}")
+            }
             _ => format!("{base}{API_PREFIX}/ws"),
         }
     }

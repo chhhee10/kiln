@@ -72,7 +72,10 @@ mod native {
             tracing::debug!("websocket closed");
         });
 
-        Ok(Connection { events: ev_rx, send: out_tx })
+        Ok(Connection {
+            events: ev_rx,
+            send: out_tx,
+        })
     }
 
     /// Keep a connection alive forever, forwarding events to `tx`. Reconnects
@@ -124,9 +127,8 @@ mod native {
 
     fn remember(list: &mut Vec<ClientMessage>, m: &ClientMessage) {
         match m {
-            ClientMessage::UnfollowTask { task_id } => {
-                list.retain(|x| !matches!(x, ClientMessage::FollowTask { task_id: t } if t == task_id))
-            }
+            ClientMessage::UnfollowTask { task_id } => list
+                .retain(|x| !matches!(x, ClientMessage::FollowTask { task_id: t } if t == task_id)),
             ClientMessage::FollowTask { .. } | ClientMessage::FollowThread { .. } => {
                 if !list.contains(m) {
                     list.push(m.clone())
@@ -146,7 +148,9 @@ mod wasm {
     use web_sys::{CloseEvent, MessageEvent, WebSocket};
 
     pub(crate) fn same_origin_impl() -> String {
-        web_sys::window().and_then(|w| w.location().origin().ok()).unwrap_or_default()
+        web_sys::window()
+            .and_then(|w| w.location().origin().ok())
+            .unwrap_or_default()
     }
 
     pub struct Connection {
@@ -179,7 +183,8 @@ mod wasm {
         mut on_event: impl FnMut(ServerEvent) + 'static,
         mut on_close: impl FnMut() + 'static,
     ) -> Result<Connection> {
-        let socket = WebSocket::new(&client.ws_url()).map_err(|e| ClientError::Http(format!("{e:?}")))?;
+        let socket =
+            WebSocket::new(&client.ws_url()).map_err(|e| ClientError::Http(format!("{e:?}")))?;
         let on_message = Closure::<dyn FnMut(MessageEvent)>::new(move |e: MessageEvent| {
             if let Some(text) = e.data().as_string() {
                 if let Some(ev) = crate::decode_server_event(&text) {
@@ -190,7 +195,11 @@ mod wasm {
         let on_close_cb = Closure::<dyn FnMut(CloseEvent)>::new(move |_e: CloseEvent| on_close());
         socket.set_onmessage(Some(on_message.as_ref().unchecked_ref()));
         socket.set_onclose(Some(on_close_cb.as_ref().unchecked_ref()));
-        Ok(Connection { socket, _on_message: on_message, _on_close: on_close_cb })
+        Ok(Connection {
+            socket,
+            _on_message: on_message,
+            _on_close: on_close_cb,
+        })
     }
 }
 

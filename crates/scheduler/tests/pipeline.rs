@@ -564,3 +564,65 @@ async fn secrets_are_redacted_in_run_events_and_l0() {
     );
     env.sched.shutdown().await;
 }
+
+fn qa_with_service(command: &str, healthcheck: &str) -> Opts {
+    Opts {
+        qa_yaml: Some(format!(
+            "version: 1\nresources: {{ cpus: 1, memory: 1g }}\nchecks:\n  unit: cargo test\n\
+             services:\n  db:\n    image: postgres:16\n    command: {command}\n    healthcheck: \"{healthcheck}\"\n"
+        )),
+        ..Opts::default()
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn qa_waits_for_healthy_services() {
+    // The service becomes healthy once its marker file exists.
+    let dir = tempfile::tempdir().unwrap();
+    let marker = dir.path().join("up");
+    let cmd = format!(
+        "[\"sh\", \"-c\", \"sleep 1; touch {}; sleep 60\"]",
+        marker.display()
+    );
+    let env = Env::new(qa_with_service(
+        &cmd,
+        &format!("test -f {}", marker.display()),
+    ))
+    .await;
+    let u = env.member("ada@acme.dev").await;
+    let (_, tasks) = env.dispatch(&u, spec(&[("t1", &[])])).await;
+    let t = env.wait_state(tasks[0].id, TaskState::Ready, T).await;
+    assert!(marker.exists());
+    let qa = env
+        .runs(t.id)
+        .await
+        .into_iter()
+        .find(|r| r.role == WorkerRole::Qa)
+        .unwrap();
+    assert_eq!(qa.error, None);
+    env.sched.shutdown().await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn qa_fails_when_a_service_dies_unhealthy() {
+    let env = Env::new(qa_with_service("[\"false\"]", "false")).await;
+    let u = env.member("ada@acme.dev").await;
+    let (_, tasks) = env.dispatch(&u, spec(&[("t1", &[])])).await;
+    let id = tasks[0].id;
+    let deadline = std::time::Instant::now() + T;
+    let qa = loop {
+        let failed = env
+            .runs(id)
+            .await
+            .into_iter()
+            .find(|r| r.role == WorkerRole::Qa && r.state == RunState::Failed);
+        if let Some(r) = failed {
+            break r;
+        }
+        assert!(std::time::Instant::now() < deadline, "QA run never failed");
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    };
+    let err = qa.error.unwrap_or_default();
+    assert!(err.contains("`db` exited before becoming healthy"), "{err}");
+    env.sched.shutdown().await;
+}

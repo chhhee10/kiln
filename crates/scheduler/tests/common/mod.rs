@@ -80,6 +80,8 @@ pub struct Opts {
     /// Track `AGENTS.md` in the repo.
     pub tracked_agents_md: bool,
     pub reconnect_budget: Duration,
+    /// Replace the seed repo's `qa.yaml`.
+    pub qa_yaml: Option<String>,
 }
 
 impl Default for Opts {
@@ -99,6 +101,7 @@ impl Default for Opts {
             timeout: Some(Duration::from_secs(60)),
             tracked_agents_md: false,
             reconnect_budget: Duration::from_secs(60),
+            qa_yaml: None,
         }
     }
 }
@@ -161,7 +164,9 @@ impl Env {
         std::fs::write(seed.join("README.md"), "# demo\n").unwrap();
         std::fs::write(
             seed.join("qa.yaml"),
-            "version: 1\nresources: { cpus: 1, memory: 1g }\nchecks:\n  unit: cargo test\n",
+            opts.qa_yaml.as_deref().unwrap_or(
+                "version: 1\nresources: { cpus: 1, memory: 1g }\nchecks:\n  unit: cargo test\n",
+            ),
         )
         .unwrap();
         if opts.tracked_agents_md {

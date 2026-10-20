@@ -129,3 +129,26 @@ async fn missing_mount_source_is_reported() {
         Err(SandboxError::MissingMountSource(_))
     ));
 }
+
+#[tokio::test]
+async fn exec_reports_exit_code_and_output() {
+    if !enabled() {
+        return;
+    }
+    let rt = DockerRuntime::connect().await.expect("docker");
+    rt.ensure_image("alpine:latest").await.unwrap();
+    let name = unique("kiln-exec");
+    let mut spec = ContainerSpec::new(&name, "alpine:latest");
+    spec.cmd = vec!["sleep".into(), "30".into()];
+    let id = rt.create(&spec).await.unwrap();
+    rt.start(&id).await.unwrap();
+    let cmd = |s: &str| vec!["sh".to_string(), "-c".to_string(), s.to_string()];
+    let ok = rt.exec(&id, &cmd("echo hello")).await.unwrap();
+    assert_eq!(ok.exit_code, 0);
+    assert!(ok.output.contains("hello"), "{}", ok.output);
+    let bad = rt.exec(&id, &cmd("echo nope >&2; exit 4")).await.unwrap();
+    assert_eq!(bad.exit_code, 4);
+    assert!(bad.output.contains("nope"), "{}", bad.output);
+    rt.stop(&id, Duration::from_secs(1)).await.unwrap();
+    rt.remove(&id).await.unwrap();
+}

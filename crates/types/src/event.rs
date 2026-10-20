@@ -48,23 +48,63 @@ pub struct RunEvent {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum RunEventKind {
     /// Free-form log line.
-    Log { level: LogLevel, message: String },
+    Log {
+        level: LogLevel,
+        message: String,
+    },
     /// A named step started ("boot stack", "run unit tests").
-    Step { title: String },
+    Step {
+        title: String,
+    },
     /// Assistant prose.
-    Assistant { text: String },
+    Assistant {
+        text: String,
+    },
     /// Model "thinking"/reasoning summary, if the harness exposes it.
-    Reasoning { text: String },
-    ToolCall { id: String, name: String, input: serde_json::Value },
-    ToolResult { id: String, ok: bool, output: String },
-    Command { command: String, exit_code: Option<i32>, output: String },
-    FileChange { path: String, change: String },
-    Progress { percent: u8, label: Option<String> },
-    Usage { tokens_in: u64, tokens_out: u64, cost_usd: f64 },
-    Artifact { path: String, kind: ArtifactKind, caption: Option<String> },
-    Error { message: String },
+    Reasoning {
+        text: String,
+    },
+    ToolCall {
+        id: String,
+        name: String,
+        input: serde_json::Value,
+    },
+    ToolResult {
+        id: String,
+        ok: bool,
+        output: String,
+    },
+    Command {
+        command: String,
+        exit_code: Option<i32>,
+        output: String,
+    },
+    FileChange {
+        path: String,
+        change: String,
+    },
+    Progress {
+        percent: u8,
+        label: Option<String>,
+    },
+    Usage {
+        tokens_in: u64,
+        tokens_out: u64,
+        cost_usd: f64,
+    },
+    Artifact {
+        path: String,
+        kind: ArtifactKind,
+        caption: Option<String>,
+    },
+    Error {
+        message: String,
+    },
     /// Harness finished. The runner sends `Complete` separately with the outcome.
-    Done { success: bool, summary: String },
+    Done {
+        success: bool,
+        summary: String,
+    },
 }
 
 impl RunEventKind {
@@ -78,42 +118,76 @@ impl RunEventKind {
             RunEventKind::ToolCall { name, input, .. } => {
                 (LogLevel::Info, format!("{name} {}", summarize_json(input)))
             }
-            RunEventKind::ToolResult { ok, output, .. } => {
-                (if *ok { LogLevel::Info } else { LogLevel::Warn }, first_line(output))
-            }
-            RunEventKind::Command { command, exit_code, .. } => match exit_code {
+            RunEventKind::ToolResult { ok, output, .. } => (
+                if *ok { LogLevel::Info } else { LogLevel::Warn },
+                first_line(output),
+            ),
+            RunEventKind::Command {
+                command, exit_code, ..
+            } => match exit_code {
                 Some(0) | None => (LogLevel::Info, format!("$ {command}")),
                 Some(c) => (LogLevel::Fail, format!("$ {command} → exit {c}")),
             },
-            RunEventKind::FileChange { path, change } => (LogLevel::Info, format!("{change} {path}")),
-            RunEventKind::Progress { percent, label } => {
-                (LogLevel::Info, format!("{percent}% {}", label.clone().unwrap_or_default()))
+            RunEventKind::FileChange { path, change } => {
+                (LogLevel::Info, format!("{change} {path}"))
             }
-            RunEventKind::Usage { tokens_in, tokens_out, cost_usd } => {
-                (LogLevel::Info, format!("usage in={tokens_in} out={tokens_out} ${cost_usd:.4}"))
-            }
-            RunEventKind::Artifact { path, caption, .. } => {
-                (LogLevel::Capt, caption.clone().unwrap_or_else(|| path.clone()))
-            }
+            RunEventKind::Progress { percent, label } => (
+                LogLevel::Info,
+                format!("{percent}% {}", label.clone().unwrap_or_default()),
+            ),
+            RunEventKind::Usage {
+                tokens_in,
+                tokens_out,
+                cost_usd,
+            } => (
+                LogLevel::Info,
+                format!("usage in={tokens_in} out={tokens_out} ${cost_usd:.4}"),
+            ),
+            RunEventKind::Artifact { path, caption, .. } => (
+                LogLevel::Capt,
+                caption.clone().unwrap_or_else(|| path.clone()),
+            ),
             RunEventKind::Error { message } => (LogLevel::Fail, message.clone()),
-            RunEventKind::Done { success, summary } => {
-                (if *success { LogLevel::Pass } else { LogLevel::Fail }, summary.clone())
-            }
+            RunEventKind::Done { success, summary } => (
+                if *success {
+                    LogLevel::Pass
+                } else {
+                    LogLevel::Fail
+                },
+                summary.clone(),
+            ),
         }
     }
 }
 
 fn first_line(s: &str) -> String {
-    let line = s.lines().find(|l| !l.trim().is_empty()).unwrap_or("").trim();
-    if line.chars().count() > 240 { line.chars().take(240).collect::<String>() + "…" } else { line.to_string() }
+    let line = s
+        .lines()
+        .find(|l| !l.trim().is_empty())
+        .unwrap_or("")
+        .trim();
+    if line.chars().count() > 240 {
+        line.chars().take(240).collect::<String>() + "…"
+    } else {
+        line.to_string()
+    }
 }
 
 fn summarize_json(v: &serde_json::Value) -> String {
     let s = match v {
         serde_json::Value::Object(m) => m
             .iter()
-            .find(|(k, _)| matches!(k.as_str(), "command" | "file_path" | "path" | "pattern" | "url" | "query"))
-            .map(|(_, v)| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string()))
+            .find(|(k, _)| {
+                matches!(
+                    k.as_str(),
+                    "command" | "file_path" | "path" | "pattern" | "url" | "query"
+                )
+            })
+            .map(|(_, v)| {
+                v.as_str()
+                    .map(str::to_string)
+                    .unwrap_or_else(|| v.to_string())
+            })
             .unwrap_or_else(|| v.to_string()),
         other => other.to_string(),
     };
@@ -136,21 +210,53 @@ pub struct LogLine {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ServerEvent {
-    Hello { version: String, user: UserSummary },
-    TaskUpserted { task: Task },
-    TaskRemoved { task_id: TaskId },
-    RunUpserted { run: Run },
-    Log { task_id: Option<TaskId>, thread_id: Option<ThreadId>, line: LogLine },
-    PlanUpserted { plan: Plan },
-    ThreadUpserted { thread: Thread },
-    Message { message: Message },
+    Hello {
+        version: String,
+        user: UserSummary,
+    },
+    TaskUpserted {
+        task: Task,
+    },
+    TaskRemoved {
+        task_id: TaskId,
+    },
+    RunUpserted {
+        run: Run,
+    },
+    Log {
+        task_id: Option<TaskId>,
+        thread_id: Option<ThreadId>,
+        line: LogLine,
+    },
+    PlanUpserted {
+        plan: Plan,
+    },
+    ThreadUpserted {
+        thread: Thread,
+    },
+    Message {
+        message: Message,
+    },
     /// Planner is working ("reading company brain · drafting changes").
-    PlannerStatus { thread_id: ThreadId, pending: bool, label: String },
-    Notification { notification: Notification },
-    MemoryUpserted { item: MemoryItem },
-    Machine { stats: MachineStats },
+    PlannerStatus {
+        thread_id: ThreadId,
+        pending: bool,
+        label: String,
+    },
+    Notification {
+        notification: Notification,
+    },
+    MemoryUpserted {
+        item: MemoryItem,
+    },
+    Machine {
+        stats: MachineStats,
+    },
     /// Something the client should show as a toast/flash.
-    Toast { message: String, ok: bool },
+    Toast {
+        message: String,
+        ok: bool,
+    },
 }
 
 impl ServerEvent {
@@ -174,9 +280,15 @@ impl ServerEvent {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ClientMessage {
     /// Subscribe to the live log of a task (all roles) or a run.
-    FollowTask { task_id: TaskId },
-    UnfollowTask { task_id: TaskId },
-    FollowThread { thread_id: ThreadId },
+    FollowTask {
+        task_id: TaskId,
+    },
+    UnfollowTask {
+        task_id: TaskId,
+    },
+    FollowThread {
+        thread_id: ThreadId,
+    },
     Ping,
 }
 
@@ -191,7 +303,10 @@ mod tests {
             run_id: RunId::nil(),
             seq: 3,
             ts: Utc::now(),
-            kind: RunEventKind::Log { level: LogLevel::Fail, message: "boom".into() },
+            kind: RunEventKind::Log {
+                level: LogLevel::Fail,
+                message: "boom".into(),
+            },
         };
         let v = serde_json::to_value(&e).unwrap();
         assert_eq!(v["type"], "log");

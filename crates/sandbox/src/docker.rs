@@ -5,6 +5,7 @@ use crate::error::{Result, SandboxError};
 use crate::spec::*;
 use async_trait::async_trait;
 use bollard::errors::Error as BollardError;
+use bollard::exec::{CreateExecOptions, StartExecResults};
 use bollard::models::{
     ContainerCreateBody, ContainerStatsResponse, EndpointSettings, HostConfig,
     Mount as DockerMount, MountType, NetworkCreateRequest, NetworkingConfig,
@@ -493,6 +494,43 @@ impl Runtime for DockerRuntime {
             out.push_str(&String::from_utf8_lossy(&chunk.into_bytes()));
         }
         Ok(out)
+    }
+
+    async fn exec(&self, id: &str, cmd: &[String]) -> Result<ExecOutput> {
+        let opts = CreateExecOptions {
+            cmd: Some(cmd.to_vec()),
+            attach_stdout: Some(true),
+            attach_stderr: Some(true),
+            ..Default::default()
+        };
+        let exec = self
+            .docker
+            .create_exec(id, opts)
+            .await
+            .map_err(|e| not_found(id, e))?;
+        let mut output = String::new();
+        if let StartExecResults::Attached {
+            output: mut stream, ..
+        } = self
+            .docker
+            .start_exec(&exec.id, None)
+            .await
+            .map_err(|e| not_found(id, e))?
+        {
+            while let Some(item) = stream.next().await {
+                let chunk = item.map_err(|e| not_found(id, e))?;
+                output.push_str(&String::from_utf8_lossy(&chunk.into_bytes()));
+            }
+        }
+        let info = self
+            .docker
+            .inspect_exec(&exec.id)
+            .await
+            .map_err(|e| not_found(id, e))?;
+        Ok(ExecOutput {
+            exit_code: info.exit_code.unwrap_or(-1),
+            output,
+        })
     }
 }
 
