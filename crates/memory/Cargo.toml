@@ -10,7 +10,7 @@ default = ["parquet"]
 # Nightly compaction of L0 jsonl.zst segments into Parquet (zstd).
 parquet = ["dep:parquet", "dep:arrow-array", "dep:arrow-schema"]
 # ONNX embeddings + reranker via fastembed (downloads models into <data>/models on first use).
-fastembed = ["dep:fastembed"]
+fastembed = ["dep:fastembed", "dep:ort"]
 # LanceDB vector index at <data>/index/lance (needs `protoc` to build).
 lance = ["dep:lancedb", "dep:futures"]
 # Ad-hoc SQL over L0 (compacted Parquet + fresh JSONL) via DataFusion.
@@ -35,6 +35,8 @@ parquet = { version = "60", optional = true, default-features = false, features 
 arrow-array = { version = "60", optional = true }
 arrow-schema = { version = "60", optional = true }
 fastembed = { version = "7", optional = true, default-features = false, features = ["ort-download-binaries-rustls-tls", "hf-hub-rustls-tls"] }
+# The same `ort` fastembed links: one shared ONNX environment per process.
+ort = { version = "=2.0.0-rc.15", optional = true, default-features = false }
 datafusion = { version = "55", optional = true, default-features = false, features = ["parquet", "sql", "compression"] }
 lancedb = { version = "0.40", optional = true, features = ["remote"] }
 futures = { workspace = true, optional = true }

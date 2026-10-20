@@ -6270,6 +6270,7 @@ dependencies = [
  "futures",
  "kiln-types",
  "lancedb",
+ "ort",
  "parquet 60.0.0",
  "serde",
  "serde_json",

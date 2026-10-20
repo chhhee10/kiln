@@ -11,7 +11,22 @@ use fastembed::{
     EmbeddingModel, RerankInitOptions, RerankerModel, TextEmbedding, TextInitOptions, TextRerank,
 };
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
+
+/// ONNX Runtime allows one environment per process; the embedder and the
+/// reranker must share it or the second model fails to load.
+fn environment() -> Result<ort::environment::Environment> {
+    static ENV: OnceLock<std::result::Result<ort::environment::Environment, String>> =
+        OnceLock::new();
+    ENV.get_or_init(|| {
+        ort::init()
+            .with_name("kiln-memory")
+            .build()
+            .map_err(|e| e.to_string())
+    })
+    .clone()
+    .map_err(ferr)
+}
 
 fn ferr(e: impl std::fmt::Display) -> MemoryError {
     MemoryError::Embed(format!("fastembed: {e}"))
@@ -71,9 +86,11 @@ impl FastEmbedder {
         let (m, dim, code) = embedding_model(model)?;
         let cache = cache_dir.to_path_buf();
         std::fs::create_dir_all(&cache)?;
+        let env = environment()?;
         let te = tokio::task::spawn_blocking(move || {
             TextEmbedding::try_new(
                 TextInitOptions::new(m)
+                    .with_environment(env)
                     .with_cache_dir(cache)
                     .with_show_download_progress(false),
             )
@@ -132,9 +149,11 @@ impl FastEmbedReranker {
         let (m, code) = reranker_model(model)?;
         let cache = cache_dir.to_path_buf();
         std::fs::create_dir_all(&cache)?;
+        let env = environment()?;
         let tr = tokio::task::spawn_blocking(move || {
             TextRerank::try_new(
                 RerankInitOptions::new(m)
+                    .with_environment(env)
                     .with_cache_dir(cache)
                     .with_show_download_progress(false),
             )
