@@ -62,8 +62,11 @@ systemd unit), `kilnd admin reset-password <email>`.
 Built end-to-end and tested with mock agents (no model credits spent). Not
 yet verified: real Claude/Codex sessions, the Tauri shell builds (needs
 WebKitGTK / Android SDK), native Android push & speech, LanceDB/fastembed at
-runtime, GitHub App against real GitHub. See the "Known gaps" list in the
-latest build report.
+runtime, GitHub App against real GitHub.
+
+Known gaps: QA sidecar healthchecks (the runtime has no exec yet), building
+`qa.yaml: extras` images, encrypted push payloads, and `--dev` choosing Docker
+even when the worker image is missing (use `KILN_RUNTIME=process` meanwhile).
 
 ## License
 
