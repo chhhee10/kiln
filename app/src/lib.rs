@@ -10,6 +10,7 @@
 
 pub mod android;
 pub mod desktop;
+pub mod markdown;
 pub mod state;
 
 use leptos::prelude::*;

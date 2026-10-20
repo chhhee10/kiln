@@ -251,7 +251,7 @@ fn card_view(ui: Ui, it: FeedItem, hl: bool) -> AnyView {
             <div class="a-agent">
                 <div class="a-mini-brand"><span></span></div>
                 <div class="a-agent-body">
-                    <div class="a-agent-text">{text}</div>
+                    <div class="a-agent-text"><crate::markdown::Markdown text=text/></div>
                     <div class="a-time">{time}</div>
                 </div>
             </div>

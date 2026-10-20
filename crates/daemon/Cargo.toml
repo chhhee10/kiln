@@ -39,7 +39,7 @@ futures.workspace = true
 clap.workspace = true
 axum.workspace = true
 tower.workspace = true
-tower-http = { workspace = true, features = ["fs", "trace", "limit", "timeout", "set-header"] }
+tower-http = { workspace = true, features = ["fs", "trace", "limit", "timeout", "set-header", "cors"] }
 toml = "1.1.8"
 qrcode = { version = "0.14.1", default-features = false, features = ["svg"] }
 if-addrs = "0.15"
@@ -51,6 +51,7 @@ bollard = "0.21.1"
 rand.workspace = true
 
 [dev-dependencies]
+reqwest.workspace = true
 kiln-api-client.workspace = true
 # The `kiln-runner-dev` example wraps the runner library for the tests.
 kiln-runner.workspace = true

@@ -95,7 +95,19 @@ pub fn rows(d: &Data, seg: Segment) -> Vec<RunRow> {
 pub fn Runs() -> impl IntoView {
     let ui = use_ui();
     let app = ui.app;
-    let seg = RwSignal::new(Segment::Qa);
+    // Open on QA (the design's default) unless it's empty and another stage
+    // has work, so "Nothing here" never hides ready PRs.
+    let first = app.data.with_untracked(|d| {
+        if !rows(d, Segment::Qa).is_empty() {
+            Segment::Qa
+        } else {
+            Segment::ALL
+                .into_iter()
+                .find(|s| !rows(d, *s).is_empty())
+                .unwrap_or(Segment::Qa)
+        }
+    });
+    let seg = RwSignal::new(first);
     let summary = Memo::new(move |_| app.data.with(summary));
     let list = Memo::new(move |_| app.data.with(|d| rows(d, seg.get())));
     let keys =

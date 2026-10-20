@@ -971,3 +971,40 @@ async fn info_routes_and_errors_are_json() {
     assert_eq!(status(&e), 403);
     d.shutdown().await;
 }
+
+/// The Tauri apps (desktop and Android WebViews) call the API cross-origin;
+/// other websites must not get CORS access.
+#[tokio::test]
+async fn cors_allows_the_native_apps_only() {
+    let env = Env::new();
+    let d = env.start().await;
+    let http = reqwest::Client::new();
+    let preflight = |origin: &'static str| {
+        http.request(
+            reqwest::Method::OPTIONS,
+            format!("{}/api/v1/auth/me", d.url()),
+        )
+        .header("origin", origin)
+        .header("access-control-request-method", "GET")
+        .header("access-control-request-headers", "authorization")
+        .send()
+    };
+    for origin in ["http://tauri.localhost", "tauri://localhost"] {
+        let r = preflight(origin).await.unwrap();
+        assert_eq!(
+            r.headers()
+                .get("access-control-allow-origin")
+                .and_then(|v| v.to_str().ok()),
+            Some(origin),
+            "{origin}"
+        );
+        assert_eq!(
+            r.headers()
+                .get("access-control-allow-credentials")
+                .and_then(|v| v.to_str().ok()),
+            Some("true")
+        );
+    }
+    let r = preflight("https://evil.example").await.unwrap();
+    assert!(r.headers().get("access-control-allow-origin").is_none());
+}

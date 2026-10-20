@@ -571,3 +571,13 @@ button:focus-visible, [tabindex]:focus-visible, a:focus-visible, select:focus-vi
 .android-title { font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
 .android-sub { font-size: 14.5px; color: #c4c7b6; }
 .android-link { color: #cdf04a; font-size: 14px; }
+
+/* Markdown in agent messages (src/markdown.rs). */
+.md p { margin: 0 0 .5em; }
+.md p:last-child, .md ul:last-child, .md ol:last-child, .md pre:last-child { margin-bottom: 0; }
+.md .md-h { font-weight: 600; }
+.md ul, .md ol { margin: 0 0 .5em; padding-left: 1.3em; }
+.md li { margin: .15em 0; }
+.md code { font-family: var(--font-mono, ui-monospace, monospace); font-size: .9em; padding: .05em .3em; border-radius: 4px; background: color-mix(in srgb, currentColor 12%, transparent); }
+.md pre { margin: 0 0 .5em; padding: .6em .75em; border-radius: 8px; overflow-x: auto; background: color-mix(in srgb, currentColor 8%, transparent); }
+.md pre code { padding: 0; background: none; }

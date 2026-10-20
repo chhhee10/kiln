@@ -182,7 +182,7 @@ pub fn Planner() -> impl IntoView {
                                     {(!you).then(|| view! { <div class="p-avatar"><div></div></div> })}
                                     <div class="col2">
                                         <div class="who">{who}</div>
-                                        <div class="body">{m.body.clone()}</div>
+                                        <div class="body"><crate::markdown::Markdown text=m.body.clone()/></div>
                                     </div>
                                 </div>
                             }

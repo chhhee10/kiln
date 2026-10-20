@@ -16,8 +16,10 @@ pub fn Login() -> impl IntoView {
         _ => None,
     });
     let server = RwSignal::new(platform::local_get(STORAGE_SERVER).unwrap_or_else(|| {
+        // Served by the daemon (`/app`): its origin is the server. Inside the
+        // Tauri shell the origin is the WebView's own (`http://tauri.localhost`).
         let o = platform::origin();
-        if o.starts_with("http") {
+        if o.starts_with("http") && !platform::is_tauri() {
             o
         } else {
             String::new()

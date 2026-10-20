@@ -32,6 +32,7 @@ use std::time::{Duration, Instant};
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
@@ -240,6 +241,35 @@ fn scheduler_config(
     })
 }
 
+/// Origins of the Tauri apps' WebViews (`tauri://localhost` on macOS/Linux,
+/// `http(s)://tauri.localhost` on Android/Windows). Browsers served by the
+/// daemon itself are same-origin and need no CORS.
+pub const APP_ORIGINS: [&str; 3] = [
+    "tauri://localhost",
+    "http://tauri.localhost",
+    "https://tauri.localhost",
+];
+
+/// CORS for the native apps only. The web client sends requests with
+/// `credentials: include`, which requires `Allow-Credentials`; that is safe
+/// because the origin list is exact (never a wildcard).
+fn app_cors() -> CorsLayer {
+    CorsLayer::new()
+        .allow_origin(AllowOrigin::list(
+            APP_ORIGINS.iter().map(|o| HeaderValue::from_static(o)),
+        ))
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::PUT,
+            axum::http::Method::PATCH,
+            axum::http::Method::DELETE,
+        ])
+        .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE, header::ACCEPT])
+        .allow_credentials(true)
+        .max_age(Duration::from_secs(3600))
+}
+
 /// Middleware stack shared by every route.
 fn layered(router: Router<AppState>, state: AppState) -> Router {
     let cfg = &state.cfg.server;
@@ -256,6 +286,7 @@ fn layered(router: Router<AppState>, state: AppState) -> Router {
             HeaderValue::from_static("same-origin"),
         ))
         // Spans carry method + path only: query strings may hold `?token=`.
+        .layer(app_cors())
         .layer(TraceLayer::new_for_http().make_span_with(|req: &Request<_>| {
             tracing::info_span!("http", method = %req.method(), path = %req.uri().path())
         }))
