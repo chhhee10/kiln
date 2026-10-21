@@ -122,7 +122,7 @@ pub fn SetupNeeded() -> impl IntoView {
         <div class="a-login a-fade">
             <div class="a-brand lg"><span></span></div>
             <div class="a-login-title">"Finish setup on desktop"</div>
-            <div class="a-login-sub">"This Mac mini has no admin yet. Create the admin account in the desktop app or with `kiln setup`, then pair this phone."</div>
+            <div class="a-login-sub">"This Mac mini has no admin yet. Create the admin account in the desktop app or the `kiln` terminal client, then pair this phone."</div>
         </div>
     }
 }

@@ -35,7 +35,8 @@ pub fn Admin() -> impl IntoView {
             <span class="topbar-title">"Admin"</span>
             <span class="mono" style="font-size:11px;color:var(--dim)">{move || spec.get()}</span>
             {move || is_admin.get().then(|| view! {
-                <button class="btn btn-primary btn-md ml-auto" on:click=move |_| app.modal.set(Some(Modal::CreateAccount))>"Create account"</button>
+                <button class="btn btn-secondary btn-md ml-auto" on:click=move |_| app.modal.set(Some(Modal::AddProject))>"Add project"</button>
+                <button class="btn btn-primary btn-md" on:click=move |_| app.modal.set(Some(Modal::CreateAccount))>"Create account"</button>
             })}
         </header>
         <div class="page">

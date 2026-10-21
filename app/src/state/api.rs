@@ -1089,6 +1089,27 @@ impl AppState {
         });
     }
 
+    pub fn create_project(&self, req: CreateProjectRequest, done: impl Fn() + 'static) {
+        if self.is_demo() {
+            self.toast("Projects can't be added in the demo", false);
+            done();
+            return;
+        }
+        let Some(c) = self.client() else { return };
+        let app = *self;
+        spawn_local(async move {
+            match c.create_project(&req).await {
+                Ok(p) => {
+                    app.toast(format!("Project added · {}", p.key), true);
+                    app.data.update(|d| d.projects.push(p));
+                    app.refresh_admin();
+                    done();
+                }
+                Err(e) => app.fail(e),
+            }
+        });
+    }
+
     pub fn set_domain(&self, domain: String) {
         let domain = domain.trim().trim_start_matches('@').to_string();
         if domain.is_empty() {

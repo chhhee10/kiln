@@ -123,6 +123,7 @@ pub struct Lightbox {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Modal {
     CreateAccount,
+    AddProject,
     AddCredential,
     RotateCredential(CredentialId),
 }

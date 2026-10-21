@@ -28,6 +28,7 @@ pub fn Overlays() -> impl IntoView {
         })}
         {move || app.modal.get().map(|m| match m {
             Modal::CreateAccount => view! { <CreateAccount/> }.into_any(),
+            Modal::AddProject => view! { <AddProject/> }.into_any(),
             Modal::AddCredential => view! { <AddCredential/> }.into_any(),
             Modal::RotateCredential(id) => view! { <RotateCredential id=id/> }.into_any(),
         })}
@@ -194,6 +195,59 @@ fn CreateAccount() -> impl IntoView {
                 <div class="modal-ft">
                     <button class="btn btn-secondary btn-lg" on:click=move |_| app.modal.set(None)>"Cancel"</button>
                     <button class="btn btn-primary btn-lg" on:click=move |_| submit()>"Create account"</button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+#[component]
+fn AddProject() -> impl IntoView {
+    let app = use_app();
+    let name = RwSignal::new(String::new());
+    let key = RwSignal::new(String::new());
+    let repo = RwSignal::new(String::new());
+    let branch = RwSignal::new("main".to_string());
+    let qa = RwSignal::new("qa.yaml".to_string());
+    let err = RwSignal::new(String::new());
+    let submit = move || {
+        let (n, k, r) = (
+            name.get_untracked().trim().to_string(),
+            key.get_untracked().trim().to_uppercase(),
+            repo.get_untracked().trim().to_string(),
+        );
+        if n.is_empty() || r.is_empty() {
+            err.set("Name and repository URL are required.".into());
+            return;
+        }
+        if k.is_empty() || !k.chars().all(|c| c.is_ascii_alphanumeric()) {
+            err.set("Key: letters and digits only, e.g. WEB.".into());
+            return;
+        }
+        app.create_project(
+            CreateProjectRequest {
+                key: k,
+                name: n,
+                repo_url: r,
+                default_branch: branch.get_untracked().trim().to_string(),
+                qa_path: qa.get_untracked().trim().to_string(),
+            },
+            move || app.modal.set(None),
+        );
+    };
+    view! {
+        <div class="scrim center" on:click=move |_| app.modal.set(None)>
+            <div class="modal narrow" on:click=|ev| ev.stop_propagation()>
+                <div class="modal-hd"><b>"Add project"</b><span>"A repository Kiln can clone and push branches to. Its qa.yaml tells QA how to boot and test it."</span></div>
+                {input("Name", name, "text", "Web app")}
+                {input("Key", key, "text", "WEB")}
+                {input("Repository URL", repo, "url", "https://github.com/acme/web.git")}
+                {input("Default branch", branch, "text", "main")}
+                {input("QA profile path", qa, "text", "qa.yaml")}
+                {move || (!err.get().is_empty()).then(|| view! { <div class="login-err">{err.get()}</div> })}
+                <div class="modal-ft">
+                    <button class="btn btn-secondary btn-lg" on:click=move |_| app.modal.set(None)>"Cancel"</button>
+                    <button class="btn btn-primary btn-lg" on:click=move |_| submit()>"Add project"</button>
                 </div>
             </div>
         </div>

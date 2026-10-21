@@ -387,6 +387,10 @@ pub async fn doctor(cfg: &Config, dev: bool) -> Vec<Check> {
             "tailscale",
             "not connected (ok with --dev: binds 127.0.0.1)",
         )),
+        None if cfg.server.bind != "tailscale" => out.push(Check::warn(
+            "tailscale",
+            format!("not connected; binding {} as configured", cfg.server.bind),
+        )),
         None => out.push(Check::fail(
             "tailscale",
             "no Tailscale address; run `tailscale up`",
