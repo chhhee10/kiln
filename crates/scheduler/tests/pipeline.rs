@@ -115,8 +115,11 @@ async fn happy_path_two_stacked_tasks() {
             .count(),
         1
     );
+    // The distiller starts after Ready and may still be running here.
     assert!(
-        runs.iter().all(|r| r.state == RunState::Succeeded),
+        runs.iter()
+            .filter(|r| r.role != WorkerRole::Distiller)
+            .all(|r| r.state == RunState::Succeeded),
         "{runs:?}"
     );
 
