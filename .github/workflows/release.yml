@@ -2,9 +2,12 @@ name: Release
 
 # Push a tag like v0.1.0 to build binaries, publish the worker image to
 # ghcr.io/chhhee10/kiln-worker and create a GitHub release.
+# Run it by hand (Actions → Release → Run workflow) to build everything
+# without publishing.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -65,6 +68,7 @@ jobs:
 
   # Native builds per architecture (Mac minis need arm64), then one manifest.
   image:
+    if: startsWith(github.ref, 'refs/tags/')
     strategy:
       matrix:
         include:
@@ -94,6 +98,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=worker-${{ matrix.arch }}
 
   image-manifest:
+    if: startsWith(github.ref, 'refs/tags/')
     needs: image
     runs-on: ubuntu-latest
     steps:
@@ -109,8 +114,101 @@ jobs:
           img=ghcr.io/chhhee10/kiln-worker
           docker buildx imagetools create -t "$img:$v" -t "$img:latest" "$img:$v-amd64" "$img:$v-arm64"
 
+  # Desktop app: .dmg (Apple Silicon), AppImage/.deb/.rpm (x86-64). Unsigned.
+  desktop:
+    strategy:
+      matrix:
+        include:
+          - { os: macos-latest, name: macos-arm64 }
+          - { os: ubuntu-22.04, name: linux-x86_64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.95.0
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target\napp/src-tauri -> target"
+      - name: System packages
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            brew install trunk
+          else
+            sudo apt-get update
+            sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf rpm
+            curl -sSfL https://github.com/trunk-rs/trunk/releases/download/v0.22.0/trunk-x86_64-unknown-linux-gnu.tar.gz | sudo tar xz -C /usr/local/bin
+          fi
+      - uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall -y --locked tauri-cli@2.12.3
+      - run: cargo tauri build
+        working-directory: app
+      - name: Collect
+        run: |
+          v=${GITHUB_REF_NAME#v}; out=$PWD/dist-apps; mkdir -p "$out"
+          b=$(find . -path '*/release/bundle' -type d | head -1)
+          for f in "$b"/dmg/*.dmg "$b"/appimage/*.AppImage "$b"/deb/*.deb "$b"/rpm/*.rpm; do
+            [ -f "$f" ] || continue
+            cp "$f" "$out/kiln-desktop-$v-${{ matrix.name }}.${f##*.}"
+          done
+          ls -l "$out"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin-desktop-${{ matrix.name }}
+          path: dist-apps/*
+
+  # Android APK (arm64), signed with the release key from the repo secrets.
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.95.0
+        with:
+          targets: wasm32-unknown-unknown,aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target\napp/src-tauri -> target"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Android SDK + NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" >/dev/null
+          echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+      - uses: jetli/trunk-action@v0.5.0
+        with:
+          version: latest
+      - uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall -y --locked tauri-cli@2.12.3
+      - run: cargo tauri android init --ci
+        working-directory: app
+      - run: cargo tauri android build --apk --target aarch64 --ci
+        working-directory: app
+      - name: Sign
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          v=${GITHUB_REF_NAME#v}; bt=$ANDROID_HOME/build-tools/36.0.0
+          apk=$(find app/src-tauri/gen/android -name '*-release-unsigned.apk' | head -1)
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/kiln.jks"
+          mkdir -p dist-apps
+          "$bt/zipalign" -f -p 4 "$apk" "$RUNNER_TEMP/aligned.apk"
+          "$bt/apksigner" sign --ks "$RUNNER_TEMP/kiln.jks" --ks-key-alias kiln \
+            --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEYSTORE_PASSWORD \
+            --out "dist-apps/kiln-android-$v-arm64.apk" "$RUNNER_TEMP/aligned.apk"
+          "$bt/apksigner" verify --print-certs "dist-apps/kiln-android-$v-arm64.apk" | head -3
+          rm -f "$RUNNER_TEMP/kiln.jks"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin-android
+          path: dist-apps/*.apk
+
   release:
-    needs: [binaries, image-manifest]
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [binaries, image-manifest, desktop, android]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -119,5 +217,8 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
-          files: kiln-*.tar.gz
+          files: |
+            kiln-*.tar.gz
+            kiln-desktop-*
+            kiln-android-*.apk
           generate_release_notes: true
