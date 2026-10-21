@@ -204,6 +204,16 @@ and run `gh auth login` as the service's user if you use token mode.
 
 ### Mac mini checklist
 
+**Shortcut:** on an Apple Silicon Mac, one script does all of this
+(Homebrew, OrbStack, Tailscale, gh, the release, config, HTTPS, service):
+
+```sh
+curl -fsSLO https://raw.githubusercontent.com/chhhee10/kiln/main/scripts/install-macos.sh
+bash install-macos.sh
+```
+
+It stops only for your password and the Tailscale/GitHub sign-ins. By hand:
+
 1. `sudo pmset -a sleep 0 autorestart 1` so it never sleeps and restarts after
    a power cut.
 2. Create a dedicated non-admin macOS user for Kiln and do everything below as
