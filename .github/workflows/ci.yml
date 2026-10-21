@@ -81,3 +81,5 @@ jobs:
       - run: cargo test --workspace
         env:
           KILN_NO_KEYCHAIN: "1"
+          # macOS temp dirs are too long for Unix socket paths.
+          TMPDIR: /tmp

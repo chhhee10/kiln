@@ -16,6 +16,9 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ```
 
+On macOS, run the tests with `TMPDIR=/tmp`: the default temp directory is
+too long for the Unix socket paths the daemon tests create.
+
 Optional, slower suites:
 
 - `KILN_TEST_DOCKER=1 cargo test -p kiln-sandbox` runs against a real Docker daemon.
