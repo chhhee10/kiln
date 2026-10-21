@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 /// Default base worker image.
-pub const DEFAULT_WORKER_IMAGE: &str = "ghcr.io/chhhee10/kiln-worker:0.1.0";
+pub const DEFAULT_WORKER_IMAGE: &str = "ghcr.io/chhhee10/kiln-worker:0.1.1";
 
 /// Machine capacity used by admission control. RAM-aware: the
 /// defaults are derived from the host's RAM when `ram_mb` is 0.
@@ -118,7 +118,7 @@ impl RoleTimeouts {
 pub struct SchedulerConfig {
     /// `<data>`: run folders, worktrees and mirrors live under it.
     pub data_dir: PathBuf,
-    /// Base worker image, e.g. `ghcr.io/chhhee10/kiln-worker:0.1.0`.
+    /// Base worker image, e.g. `ghcr.io/chhhee10/kiln-worker:0.1.1`.
     pub worker_image: String,
     /// `ProcessRuntime` only: host path of `kiln-runner`. When set, the
     /// container command is `<runner_bin> run` and `HOME` is not overridden;

@@ -25,14 +25,14 @@ Download the archive for your platform from
 [Releases](https://github.com/chhhee10/kiln/releases) and unpack it:
 
 ```sh
-tar xzf kiln-v0.1.0-aarch64-apple-darwin.tar.gz   # or x86_64/aarch64-unknown-linux-gnu
-sudo cp kiln-v0.1.0-*/kilnd kiln-v0.1.0-*/kiln kiln-v0.1.0-*/kiln-runner /usr/local/bin/
-mkdir -p ~/.kiln && cp -r kiln-v0.1.0-*/web ~/.kiln/web
+tar xzf kiln-v0.1.1-aarch64-apple-darwin.tar.gz   # or x86_64/aarch64-unknown-linux-gnu
+sudo cp kiln-v0.1.1-*/kilnd kiln-v0.1.1-*/kiln kiln-v0.1.1-*/kiln-runner /usr/local/bin/
+mkdir -p ~/.kiln && cp -r kiln-v0.1.1-*/web ~/.kiln/web
 ```
 
 The worker image (`ghcr.io/chhhee10/kiln-worker`, amd64 and arm64) is pulled
 automatically the first time a task runs. To pull it ahead of time:
-`docker pull ghcr.io/chhhee10/kiln-worker:0.1.0`.
+`docker pull ghcr.io/chhhee10/kiln-worker:0.1.1`.
 
 ### From source
 
@@ -42,7 +42,7 @@ rustup target add wasm32-unknown-unknown && cargo install trunk
 (cd app && trunk build --release)
 cargo build --release -p kiln-daemon -p kiln-tui -p kiln-runner
 mkdir -p ~/.kiln && cp -r app/dist ~/.kiln/web
-docker build -f images/worker/Dockerfile -t ghcr.io/chhhee10/kiln-worker:0.1.0 .
+docker build -f images/worker/Dockerfile -t ghcr.io/chhhee10/kiln-worker:0.1.1 .
 ```
 
 Binaries land in `target/release/` (`kilnd`, `kiln`, `kiln-runner`).
@@ -220,19 +220,28 @@ and run `gh auth login` as the service's user if you use token mode.
 
 - **Browser**: `<public_url>/app/`.
 - **Terminal**: `kiln --server <public_url>` (`kiln login` once).
-- **Desktop app**: build with `cargo tauri build` in `app/src-tauri` (needs
-  WebKitGTK on Linux). Produces `.app`/`.dmg`, AppImage, `.deb` and `.rpm`.
-- **Android**: see [`app/src-tauri/ANDROID.md`](../app/src-tauri/ANDROID.md).
-  Pair the phone from **Settings → Devices → Pair a phone** by scanning
-  the QR. Push notifications need a UnifiedPush distributor such as the
-  [ntfy](https://ntfy.sh) app (optionally your own server: `[push] ntfy_url`).
+- **Desktop app**: download from
+  [Releases](https://github.com/chhhee10/kiln/releases): `.dmg` for Apple
+  Silicon Macs, AppImage, `.deb` or `.rpm` for Linux. The builds aren't
+  code-signed yet: on macOS, right-click the app → **Open** the first time
+  (or `xattr -dr com.apple.quarantine /Applications/Kiln.app`). Sign in with
+  your server's URL. To build it yourself: `cargo tauri build` in `app/`.
+- **For teammates**: copy the app files into `<data_dir>/downloads/<version>/`
+  (e.g. `~/.kiln/downloads/0.1.1/`) and they appear at `<public_url>/download`.
+- **Android**: download `kiln-android-*-arm64.apk` from Releases and install
+  it (allow installs from your browser or file manager). Pair the phone from
+  **Settings → Devices → Pair a phone** by scanning the QR, or sign in with
+  the server URL. Push notifications need a UnifiedPush distributor such as
+  the [ntfy](https://ntfy.sh) app (optionally your own server:
+  `[push] ntfy_url`). Building it yourself:
+  [`app/src-tauri/ANDROID.md`](../app/src-tauri/ANDROID.md).
 
 ## Troubleshooting
 
 - **`kilnd` refuses to start: no Tailscale address.** Run `tailscale up`, or
   set `server.bind = "127.0.0.1"`. Kiln never listens on `0.0.0.0`.
 - **Socket path too long.** Move `data_dir` somewhere shorter (`~/.kiln`).
-- **Image not found.** `docker pull ghcr.io/chhhee10/kiln-worker:0.1.0`, or
+- **Image not found.** `docker pull ghcr.io/chhhee10/kiln-worker:0.1.1`, or
   set `runtime.worker_image` to an image you built.
 - **A run fails right away.** Open it in Runs: the error includes the last
   lines of the container's output. Missing credentials show up here.
