@@ -11,7 +11,27 @@ permissions:
   packages: write
 
 jobs:
+  # The web app is platform-independent: build it once.
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.95.0
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: jetli/trunk-action@v0.5.0
+        with:
+          version: latest
+      - run: trunk build --release
+        working-directory: app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: app/dist
+
   binaries:
+    needs: web
     strategy:
       matrix:
         include:
@@ -23,13 +43,12 @@ jobs:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@1.95.0
         with:
-          targets: ${{ matrix.target }},wasm32-unknown-unknown
+          targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
-      - uses: jetli/trunk-action@v0.5.0
+      - uses: actions/download-artifact@v4
         with:
-          version: latest
-      - run: trunk build --release
-        working-directory: app
+          name: web
+          path: app/dist
       - run: cargo build --release --target ${{ matrix.target }} -p kiln-daemon -p kiln-tui -p kiln-runner
       - name: Package
         run: |
