@@ -574,7 +574,7 @@ pub fn memory_card(d: &Data, m: &MemoryItem) -> FeedItem {
     }
 }
 
-/// "sonnet-4.5 → gpt-5 → opus-4.1".
+/// "sonnet-5-5 → gpt-5 → opus-5-5".
 pub fn plan_models(d: &Data, ts: &kiln_types::plan::TaskSpec) -> String {
     WorkerRole::PIPELINE
         .into_iter()
@@ -1078,7 +1078,7 @@ mod tests {
         };
         assert_eq!(*version, 3);
         assert_eq!(rows[0].id, "T1");
-        assert_eq!(rows[0].models, "sonnet-4.5 → gpt-5 → opus-4.1");
+        assert_eq!(rows[0].models, "sonnet-5-5 → gpt-5 → opus-5-5");
     }
 
     #[test]
@@ -1231,7 +1231,7 @@ mod tests {
         );
         assert!(
             approved_followup(&ts)
-                .starts_with("Dispatched. FP-160 is with the Builder on sonnet-4.5.")
+                .starts_with("Dispatched. FP-160 is with the Builder on sonnet-5-5.")
         );
         let m = d
             .memory

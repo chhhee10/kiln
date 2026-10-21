@@ -200,7 +200,7 @@ async fn setup_login_register() {
     assert!(
         cat.harnesses
             .iter()
-            .any(|h| h.id == "claude_sdk" && h.models.contains(&"claude-sonnet-4.5".to_string()))
+            .any(|h| h.id == "claude_sdk" && h.models.contains(&"claude-sonnet-5-5".to_string()))
     );
 
     // Logout kills the token.

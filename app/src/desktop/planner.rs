@@ -108,7 +108,7 @@ pub fn Planner() -> impl IntoView {
         detail
             .with(|d| d.as_ref().map(|d| d.planner_model.clone()))
             .filter(|m| !m.is_empty())
-            .unwrap_or_else(|| "claude-opus-4.1".into())
+            .unwrap_or_else(|| "claude-opus-5-5".into())
     });
     let in_context = Memo::new(move |_| {
         detail
@@ -463,7 +463,7 @@ fn plan_task(
                 };
                 let mut c = slot
                     .clone()
-                    .unwrap_or_else(|| WorkerChoice::new("claude_sdk", "claude-sonnet-4.5"));
+                    .unwrap_or_else(|| WorkerChoice::new("claude_sdk", "claude-sonnet-5-5"));
                 f(&mut c);
                 *slot = Some(c);
             }))

@@ -32,12 +32,12 @@ pub fn w0() -> BTreeMap<WorkerRole, WorkerChoice> {
     BTreeMap::from([
         (
             WorkerRole::Builder,
-            WorkerChoice::new(HARNESS_CLAUDE, "claude-sonnet-4.5"),
+            WorkerChoice::new(HARNESS_CLAUDE, "claude-sonnet-5-5"),
         ),
         (WorkerRole::Qa, WorkerChoice::new(HARNESS_CODEX, "gpt-5")),
         (
             WorkerRole::Reviewer,
-            WorkerChoice::new(HARNESS_CLAUDE, "claude-opus-4.1"),
+            WorkerChoice::new(HARNESS_CLAUDE, "claude-opus-5-5"),
         ),
     ])
 }
@@ -56,7 +56,7 @@ pub fn catalog() -> HarnessCatalog {
             HarnessInfo {
                 id: HARNESS_CLAUDE.into(),
                 label: "Claude Agent SDK".into(),
-                models: vec!["claude-sonnet-4.5".into(), "claude-opus-4.1".into()],
+                models: vec!["claude-sonnet-5-5".into(), "claude-opus-5-5".into()],
                 experimental: false,
             },
             HarnessInfo {
@@ -470,7 +470,7 @@ fn make_run(
         .workers
         .get(&role)
         .cloned()
-        .unwrap_or_else(|| WorkerChoice::new(HARNESS_CLAUDE, "claude-sonnet-4.5"));
+        .unwrap_or_else(|| WorkerChoice::new(HARNESS_CLAUDE, "claude-sonnet-5-5"));
     Run {
         id: RunId::new(),
         task_id: Some(task.id),
@@ -921,8 +921,8 @@ pub fn seed(now: DateTime<Utc>) -> Data {
                         "Docs page: configuring retries",
                         &["New page under /docs/sdk/retries", "Code sample matches the SDK API"],
                         PlanWorkers {
-                            builder: Some(WorkerChoice::new(HARNESS_CLAUDE, "claude-sonnet-4.5")),
-                            qa: Some(WorkerChoice::new(HARNESS_CLAUDE, "claude-sonnet-4.5")),
+                            builder: Some(WorkerChoice::new(HARNESS_CLAUDE, "claude-sonnet-5-5")),
+                            qa: Some(WorkerChoice::new(HARNESS_CLAUDE, "claude-sonnet-5-5")),
                             reviewer: Some(WorkerChoice::new(HARNESS_CODEX, "gpt-5")),
                         },
                     ),
@@ -997,7 +997,7 @@ pub fn seed(now: DateTime<Utc>) -> Data {
                 messages,
                 plan: None,
                 memories_in_context: 3,
-                planner_model: "claude-opus-4.1".into(),
+                planner_model: "claude-opus-5-5".into(),
             },
         );
         d.threads.push(thread);

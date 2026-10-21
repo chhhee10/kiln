@@ -23,9 +23,9 @@ const DOMAIN: &str = "company.dev";
 
 fn w0() -> [Worker; 3] {
     [
-        Worker::new("claude_sdk", "claude-sonnet-4.5"),
+        Worker::new("claude_sdk", "claude-sonnet-5-5"),
         Worker::new("codex", "gpt-5"),
-        Worker::new("claude_sdk", "claude-opus-4.1"),
+        Worker::new("claude_sdk", "claude-opus-5-5"),
     ]
 }
 
@@ -241,8 +241,8 @@ fn plan0() -> PlanDraft {
                 false,
                 &["New page under /docs/sdk/retries", "Code sample matches the SDK API"],
                 [
-                    Worker::new("claude_sdk", "claude-sonnet-4.5"),
-                    Worker::new("claude_sdk", "claude-sonnet-4.5"),
+                    Worker::new("claude_sdk", "claude-sonnet-5-5"),
+                    Worker::new("claude_sdk", "claude-sonnet-5-5"),
                     Worker::new("codex", "gpt-5"),
                 ],
             ),
@@ -571,7 +571,7 @@ impl DemoWorld {
             DataEvent::Conversation(Conversation {
                 thread: Some("thread-0".into()),
                 title: self.plan.title.clone(),
-                model: "opus-4.1".into(),
+                model: "opus-5-5".into(),
                 memories: 3,
                 msgs: msgs0(),
                 pending: None,

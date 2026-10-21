@@ -223,7 +223,7 @@ fn run_160x45() {
     at(&b, 2, 5, "✓ builder     passed");
     assert_eq!(fg_at(&b, 2, 5), PASSED);
     at(&b, 44, 5, "4m12s");
-    at(&b, 4, 6, "claude-agent-sdk · claude-sonnet-4.5");
+    at(&b, 4, 6, "claude-agent-sdk · claude-sonnet-5-5");
     assert_eq!(fg_at(&b, 2, 8), RUNNING);
     at(&b, 4, 8, "qa          running");
     at(&b, 4, 9, "codex · gpt-5");
@@ -346,7 +346,7 @@ fn plans_160x45() {
     at(&b, 88, 12, "model");
     at(&b, 54, 13, "builder");
     at(&b, 66, 13, "Claude Agent SDK");
-    at(&b, 88, 13, "claude-sonnet-4.5");
+    at(&b, 88, 13, "claude-sonnet-5-5");
     at(&b, 48, 26, "▸ T3  Docs page: configuring retries  2 criteria · claude / claude / gpt");
     at(&b, 48, 40, "3 tasks · up to 27 worker runs · loop max 3 → escalate");
     at(&b, 134, 40, " a  approve & dispatch ");
@@ -363,7 +363,7 @@ fn plans_160x45() {
     assert_eq!(fg_at(&b, 112, 13), ACCENT);
     key(&mut a, 'l');
     let b = render_buffer(&a, 160, 45);
-    at(&b, 88, 13, "claude-opus-4.1");
+    at(&b, 88, 13, "claude-opus-5-5");
     key(&mut a, 'L');
     let b = render_buffer(&a, 160, 45);
     at(&b, 66, 13, "Codex");
@@ -401,7 +401,7 @@ fn chat_160x45() {
     at(&b, 1, 3, "▌ Retry & backoff for SDK client");
     at(&b, 3, 4, "needs approval");
     assert_eq!(fg_at(&b, 3, 4), ACCENT);
-    at(&b, 40, 1, "╭─ Planner · Retry & backoff for SDK client · opus-4.1 ");
+    at(&b, 40, 1, "╭─ Planner · Retry & backoff for SDK client · opus-5-5 ");
     assert_eq!(fg_at(&b, 40, 1), ACCENT);
     let (_, y) = find(&b, "◆ planner").unwrap();
     assert_eq!(fg_at(&b, 44, y), ACCENT);

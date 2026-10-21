@@ -312,16 +312,16 @@ fn plan_tree_navigation_and_expand() {
 #[test]
 fn plan_model_and_harness_cycling() {
     let mut a = app(Screen::Plans);
-    a.pcur = 4; // T1 builder: claude_sdk / claude-sonnet-4.5
+    a.pcur = 4; // T1 builder: claude_sdk / claude-sonnet-5-5
     let w = |a: &App| a.data.plan.as_ref().unwrap().tasks[0].workers[0].clone();
     k(&mut a, 'l');
-    assert_eq!(w(&a).model, "claude-opus-4.1");
+    assert_eq!(w(&a).model, "claude-opus-5-5");
     k(&mut a, 'l');
     k(&mut a, 'l');
     k(&mut a, 'l');
     assert_eq!(w(&a).model, "qwen3-coder");
     k(&mut a, 'l');
-    assert_eq!(w(&a).model, "claude-sonnet-4.5", "wraps around");
+    assert_eq!(w(&a).model, "claude-sonnet-5-5", "wraps around");
     k(&mut a, 'h');
     assert_eq!(w(&a).model, "qwen3-coder", "wraps backwards");
     k(&mut a, 'L');
@@ -348,7 +348,7 @@ fn harness_change_resets_model_outside_its_catalog() {
     cat[1].models = vec!["gpt-5".into(), "gpt-5-codex".into()];
     a.data.catalog = cat;
     a.pcur = 4;
-    k(&mut a, 'L'); // claude-sonnet-4.5 isn't a Codex model
+    k(&mut a, 'L'); // claude-sonnet-5-5 isn't a Codex model
     let w = a.data.plan.as_ref().unwrap().tasks[0].workers[0].clone();
     assert_eq!((w.harness.as_str(), w.model.as_str()), ("codex", "gpt-5"));
     k(&mut a, 'l');
@@ -363,11 +363,11 @@ fn plan_edits_survive_a_new_version() {
     k(&mut a, 'l');
     let mut incoming = a.data.plan.clone().unwrap();
     incoming.version = 4;
-    incoming.tasks[0].workers[0].model = "claude-sonnet-4.5".into();
+    incoming.tasks[0].workers[0].model = "claude-sonnet-5-5".into();
     a.update(Msg::Data(DataEvent::Plan(incoming)));
     let p = a.data.plan.as_ref().unwrap();
     assert_eq!(p.version, 4);
-    assert_eq!(p.tasks[0].workers[0].model, "claude-opus-4.1");
+    assert_eq!(p.tasks[0].workers[0].model, "claude-opus-5-5");
 }
 
 #[test]

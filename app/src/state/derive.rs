@@ -620,7 +620,7 @@ mod tests {
         assert_eq!(s[2].status, Status::Queued);
         assert_eq!(s[2].dur, "waiting");
         assert!(s[0].connector_done && !s[1].connector_done && s[2].last);
-        assert_eq!(s[0].harness_model, "Claude Agent SDK · claude-sonnet-4.5");
+        assert_eq!(s[0].harness_model, "Claude Agent SDK · claude-sonnet-5-5");
         assert_eq!(current_role(t), WorkerRole::Qa);
     }
 

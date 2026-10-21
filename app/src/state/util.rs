@@ -92,7 +92,7 @@ pub fn first_name(name: &str) -> String {
     name.split_whitespace().next().unwrap_or(name).to_string()
 }
 
-/// "claude-opus-4.1" → "opus-4.1" (reviewer verdict header).
+/// "claude-opus-5-5" → "opus-5-5" (reviewer verdict header).
 pub fn short_model(model: &str) -> String {
     model.strip_prefix("claude-").unwrap_or(model).to_string()
 }
@@ -143,7 +143,7 @@ mod tests {
         assert_eq!(short_name("Marketing website"), "Website");
         assert_eq!(short_name("kiln"), "Kiln");
         assert_eq!(short_person("Alex Rivera"), "Alex R.");
-        assert_eq!(short_model("claude-opus-4.1"), "opus-4.1");
+        assert_eq!(short_model("claude-opus-5-5"), "opus-5-5");
         assert_eq!(short_model("gpt-5"), "gpt-5");
     }
 

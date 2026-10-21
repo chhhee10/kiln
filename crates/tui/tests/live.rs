@@ -59,9 +59,9 @@ fn project() -> Project {
 
 fn task(owner: UserId, project: ProjectId) -> Task {
     let mut workers = BTreeMap::new();
-    workers.insert(WorkerRole::Builder, WorkerChoice::new("claude_sdk", "claude-sonnet-4.5"));
+    workers.insert(WorkerRole::Builder, WorkerChoice::new("claude_sdk", "claude-sonnet-5-5"));
     workers.insert(WorkerRole::Qa, WorkerChoice::new("codex", "gpt-5"));
-    workers.insert(WorkerRole::Reviewer, WorkerChoice::new("claude_sdk", "claude-opus-4.1"));
+    workers.insert(WorkerRole::Reviewer, WorkerChoice::new("claude_sdk", "claude-opus-5-5"));
     Task {
         id: TaskId::new(),
         plan_id: PlanId::new(),

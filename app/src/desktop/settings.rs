@@ -140,7 +140,7 @@ fn Defaults() -> impl IntoView {
                 let e = s
                     .worker_defaults
                     .entry(role)
-                    .or_insert_with(|| WorkerChoice::new("claude_sdk", "claude-sonnet-4.5"));
+                    .or_insert_with(|| WorkerChoice::new("claude_sdk", "claude-sonnet-5-5"));
                 f(e);
             })
         };

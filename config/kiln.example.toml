@@ -78,7 +78,7 @@ use_gh_cli = true
 # string is accepted, so new models need no release.
 [harnesses.claude_sdk]
 label = "Claude Agent SDK"
-models = ["claude-sonnet-4.5", "claude-opus-4.1"]
+models = ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"]
 
 [harnesses.codex]
 label = "Codex"
@@ -88,7 +88,7 @@ models = ["gpt-5", "gpt-5-codex", "qwen3-coder"]
 [harnesses.opencode]
 label = "OpenCode"
 experimental = true
-models = ["qwen3-coder", "gpt-5", "claude-sonnet-4.5"]
+models = ["qwen3-coder", "gpt-5", "claude-sonnet-5-5"]
 # enabled = false     # hide a harness
 
 # [harnesses.mock]    # dev only; deterministic, no model calls
@@ -97,11 +97,11 @@ models = ["qwen3-coder", "gpt-5", "claude-sonnet-4.5"]
 # Default worker per role ("harness:model") for users who haven't picked one
 # in Settings → Worker defaults.
 [defaults]
-planner = "claude_sdk:claude-opus-4.1"
-builder = "claude_sdk:claude-sonnet-4.5"
+planner = "claude_sdk:claude-opus-5-5"
+builder = "claude_sdk:claude-sonnet-5-5"
 qa = "codex:gpt-5"
-reviewer = "claude_sdk:claude-opus-4.1"
-distiller = "claude_sdk:claude-sonnet-4.5"
+reviewer = "claude_sdk:claude-opus-5-5"
+distiller = "claude_sdk:claude-sonnet-5-5"
 
 [memory]
 llm_distill = true    # run the Distiller with the run owner's credentials

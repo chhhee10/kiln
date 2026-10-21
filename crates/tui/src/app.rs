@@ -1246,7 +1246,7 @@ fn f_owned(s: &str) -> String {
 /// Harness/model lists from the prototype, used until the daemon's
 /// `/harnesses` catalog arrives (and by demo mode).
 pub fn default_catalog() -> Vec<HarnessOption> {
-    let models: Vec<String> = ["claude-sonnet-4.5", "claude-opus-4.1", "gpt-5", "gpt-5-codex", "qwen3-coder"]
+    let models: Vec<String> = ["claude-sonnet-5-5", "claude-opus-5-5", "gpt-5", "gpt-5-codex", "qwen3-coder"]
         .iter()
         .map(|s| s.to_string())
         .collect();

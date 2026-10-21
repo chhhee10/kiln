@@ -295,11 +295,11 @@ impl Default for WorkerDefaults {
     // Seed defaults (Settings → Worker defaults).
     fn default() -> Self {
         Self {
-            planner: "claude_sdk:claude-opus-4.1".into(),
-            builder: "claude_sdk:claude-sonnet-4.5".into(),
+            planner: "claude_sdk:claude-opus-5-5".into(),
+            builder: "claude_sdk:claude-sonnet-5-5".into(),
             qa: "codex:gpt-5".into(),
-            reviewer: "claude_sdk:claude-opus-4.1".into(),
-            distiller: "claude_sdk:claude-sonnet-4.5".into(),
+            reviewer: "claude_sdk:claude-opus-5-5".into(),
+            distiller: "claude_sdk:claude-sonnet-5-5".into(),
         }
     }
 }
@@ -735,7 +735,7 @@ pub fn builtin_harnesses() -> Vec<HarnessInfo> {
         HarnessInfo {
             id: "claude_sdk".into(),
             label: "Claude Agent SDK".into(),
-            models: s(&["claude-sonnet-4.5", "claude-opus-4.1"]),
+            models: s(&["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"]),
             experimental: false,
         },
         HarnessInfo {
@@ -747,7 +747,7 @@ pub fn builtin_harnesses() -> Vec<HarnessInfo> {
         HarnessInfo {
             id: "opencode".into(),
             label: "OpenCode".into(),
-            models: s(&["qwen3-coder", "gpt-5", "claude-sonnet-4.5"]),
+            models: s(&["qwen3-coder", "gpt-5", "claude-sonnet-5-5"]),
             experimental: true,
         },
         HarnessInfo {
