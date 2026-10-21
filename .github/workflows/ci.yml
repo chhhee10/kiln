@@ -69,3 +69,15 @@ jobs:
           tags: kiln/worker:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # The Mac mini is the main target: build and test natively on Apple Silicon.
+  macos:
+    name: macOS tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.95.0
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
+        env:
+          KILN_NO_KEYCHAIN: "1"
