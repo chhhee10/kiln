@@ -8,11 +8,16 @@
 # the latest Kiln release into ~/.kiln; writes ~/.kiln/kiln.toml; publishes
 # HTTPS on the tailnet; installs and starts the launchd service. It pauses
 # only for things you must do yourself (passwords and sign-ins).
-# Safe to re-run: finished steps are skipped.
+# Safe to re-run: finished steps are skipped. Re-run it to upgrade.
+#
+# To install from a fork or a private copy (releases and worker image under
+# another owner), set KILN_REPO=<owner>/<repo>. Private releases and images
+# are fetched with your `gh` sign-in.
 set -euo pipefail
 
 KILN_HOME="${KILN_HOME:-$HOME/.kiln}"
-REPO="chhhee10/kiln"
+REPO="${KILN_REPO:-chhhee10/kiln}"
+IMAGE="ghcr.io/$(echo "${REPO%/*}" | tr '[:upper:]' '[:lower:]')/kiln-worker"
 TS=/Applications/Tailscale.app/Contents/MacOS/Tailscale
 
 say() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
@@ -61,12 +66,12 @@ if ! gh auth status >/dev/null 2>&1; then
 fi
 
 say "Downloading the latest Kiln release"
-TAG=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | python3 -c 'import sys,json;print(json.load(sys.stdin)["tag_name"])')
+TAG=$(gh api "repos/$REPO/releases/latest" --jq .tag_name)
 DIR="$KILN_HOME/kiln-$TAG-aarch64-apple-darwin"
 mkdir -p "$KILN_HOME/bin"
 chmod 700 "$KILN_HOME"
 if [ ! -x "$DIR/kilnd" ]; then
-    curl -fsSL "https://github.com/$REPO/releases/download/$TAG/kiln-$TAG-aarch64-apple-darwin.tar.gz" | tar xz -C "$KILN_HOME"
+    gh release download "$TAG" --repo "$REPO" --pattern "kiln-$TAG-aarch64-apple-darwin.tar.gz" --output - | tar xz -C "$KILN_HOME"
     xattr -dr com.apple.quarantine "$DIR" 2>/dev/null || true
 fi
 for b in kilnd kiln kiln-runner; do ln -sf "$DIR/$b" "$KILN_HOME/bin/$b"; done
@@ -91,14 +96,25 @@ data_dir = "$KILN_HOME"
 bind = "tailscale"
 public_url = "https://$TS_NAME"
 
+[runtime]
+worker_image = "$IMAGE:${TAG#v}"   # kept current by re-running install-macos.sh
+
 [github]
 mode = "token"   # uses \`gh auth token\`; see docs/GETTING_STARTED.md for GitHub App mode
 EOF
+else
+    # Upgrade: point an existing config at this release's image.
+    sed -i '' -E "s|^worker_image = \"[^\"]*\"|worker_image = \"$IMAGE:${TAG#v}\"|" "$KILN_HOME/kiln.toml"
 fi
 
 VERSION=${TAG#v}
 say "Pulling the worker image (a few minutes the first time)"
-docker pull "ghcr.io/$REPO-worker:$VERSION" >/dev/null
+if ! docker pull "$IMAGE:$VERSION" >/dev/null 2>&1; then
+    # Private image: log Docker in to ghcr.io with the gh sign-in.
+    gh auth status 2>&1 | grep -q read:packages || gh auth refresh -h github.com -s read:packages
+    gh auth token | docker login ghcr.io -u "$(gh api user --jq .login)" --password-stdin >/dev/null
+    docker pull "$IMAGE:$VERSION" >/dev/null
+fi
 
 say "Installing the Kiln service"
 kilnd install --force

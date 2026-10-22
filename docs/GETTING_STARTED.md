@@ -212,7 +212,11 @@ curl -fsSLO https://raw.githubusercontent.com/chhhee10/kiln/main/scripts/install
 bash install-macos.sh
 ```
 
-It stops only for your password and the Tailscale/GitHub sign-ins. By hand:
+It stops only for your password and the Tailscale/GitHub sign-ins. Re-run it
+to upgrade. For a fork or private copy, run it with
+`KILN_REPO=<owner>/<repo> bash install-macos.sh`: it then installs that repo's
+release and `ghcr.io/<owner>/kiln-worker`, signing in with `gh` when either is
+private. By hand:
 
 1. `sudo pmset -a sleep 0 autorestart 1` so it never sleeps and restarts after
    a power cut.
