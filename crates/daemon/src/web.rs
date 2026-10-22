@@ -20,8 +20,10 @@ pub fn find_web_dir(configured: &Path, dev: bool) -> Option<PathBuf> {
     if configured.join("index.html").is_file() {
         return Some(configured.to_path_buf());
     }
+    // Resolve symlinks (e.g. ~/.kiln/bin/kilnd → the unpacked release).
     if let Some(beside) = std::env::current_exe()
         .ok()
+        .and_then(|exe| std::fs::canonicalize(exe).ok())
         .and_then(|exe| exe.parent().map(|d| d.join("web")))
         .filter(|d| d.join("index.html").is_file())
     {
