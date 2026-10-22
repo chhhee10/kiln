@@ -4,7 +4,8 @@
 #   curl -fsSLO https://raw.githubusercontent.com/chhhee10/kiln/main/scripts/install-macos.sh
 #   bash install-macos.sh
 #
-# Installs Homebrew (if missing), OrbStack, Tailscale, git and gh; downloads
+# Installs what is missing of Homebrew, Docker (OrbStack), Tailscale, git and
+# gh, reusing an existing Docker Desktop or Tailscale CLI; downloads
 # the latest Kiln release into ~/.kiln; writes ~/.kiln/kiln.toml; publishes
 # HTTPS on the tailnet; installs and starts the launchd service. It pauses
 # only for things you must do yourself (passwords and sign-ins).
@@ -35,27 +36,43 @@ wait_for() { # wait_for "<message>" <command...>
     exit 1
 }
 
-say "Keep the Mac awake and restart after power loss (needs your password)"
-sudo pmset -a sleep 0 autorestart 1
+if ! pmset -g | grep -qE '^ +sleep +0' || ! pmset -g | grep -qE '^ +autorestart +1'; then
+    say "Keep the Mac awake and restart after power loss (needs your password)"
+    sudo pmset -a sleep 0 autorestart 1
+fi
 
-if ! command -v brew >/dev/null; then
+if ! command -v brew >/dev/null && [ ! -x /opt/homebrew/bin/brew ]; then
     say "Installing Homebrew"
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-say "Installing git, gh, OrbStack and Tailscale"
-brew install git gh
-[ -d /Applications/OrbStack.app ] || brew install --cask orbstack
-[ -d /Applications/Tailscale.app ] || brew install --cask tailscale
+say "Installing git and gh"
+command -v git >/dev/null && command -v gh >/dev/null || brew install git gh
 
-say "Starting OrbStack (finish its first-run window if one opens)"
-open -a OrbStack
-export PATH="$HOME/.orbstack/bin:/usr/local/bin:$PATH"
-wait_for "Docker is up" docker info
+# Docker: keep a working Docker (Docker Desktop, OrbStack, Colima); else OrbStack.
+export PATH="$HOME/.orbstack/bin:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:$PATH"
+if ! docker info >/dev/null 2>&1; then
+    if [ -d /Applications/Docker.app ] && [ ! -d /Applications/OrbStack.app ]; then
+        say "Starting Docker Desktop"
+        open -a Docker
+    else
+        [ -d /Applications/OrbStack.app ] || brew install --cask orbstack
+        say "Starting OrbStack (finish its first-run window if one opens)"
+        open -a OrbStack
+    fi
+    wait_for "Docker is up" docker info
+fi
+DOCKER_SOCK=$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null | sed 's|^unix://||')
 
-say "Tailscale: sign in from the menu-bar icon if asked"
-open -a Tailscale
+# Tailscale: use an installed CLI (Homebrew/standalone daemon) or the app.
+if command -v tailscale >/dev/null; then
+    TS=$(command -v tailscale)
+else
+    [ -d /Applications/Tailscale.app ] || brew install --cask tailscale
+    say "Tailscale: sign in from the menu-bar icon if asked"
+    open -a Tailscale
+fi
 wait_for "Connected to your tailnet" "$TS" ip -4
 TS_IP=$("$TS" ip -4 | head -1)
 TS_NAME=$("$TS" status --json | python3 -c 'import sys,json;print(json.load(sys.stdin)["Self"]["DNSName"].rstrip("."))')
@@ -98,6 +115,7 @@ public_url = "https://$TS_NAME"
 
 [runtime]
 worker_image = "$IMAGE:${TAG#v}"   # kept current by re-running install-macos.sh
+docker_socket = "$DOCKER_SOCK"
 
 [github]
 mode = "token"   # uses \`gh auth token\`; see docs/GETTING_STARTED.md for GitHub App mode
