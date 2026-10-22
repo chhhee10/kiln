@@ -6118,7 +6118,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-api-client"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "futures",
  "js-sys",
@@ -6136,7 +6136,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-app"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "console_error_panic_hook",
@@ -6155,7 +6155,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-auth"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "argon2",
  "base64 0.23.1",
@@ -6173,7 +6173,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-daemon"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "axum",
@@ -6218,7 +6218,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-events"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "kiln-types",
  "tokio",
@@ -6227,7 +6227,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-gitops"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -6247,7 +6247,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-harness"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "kiln-types",
  "serde",
@@ -6259,7 +6259,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-memory"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "arrow-array 60.0.0",
@@ -6287,7 +6287,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-notifier"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "aes-gcm",
  "async-trait",
@@ -6309,7 +6309,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-planner"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "kiln-types",
@@ -6318,7 +6318,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-runner"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "clap",
@@ -6337,7 +6337,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-sandbox"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "async-trait",
  "bollard",
@@ -6354,7 +6354,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-scheduler"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "chrono",
@@ -6388,7 +6388,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-store"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "kiln-types",
@@ -6404,7 +6404,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-tui"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "axum",
@@ -6427,7 +6427,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-types"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "serde",
@@ -6438,7 +6438,7 @@ dependencies = [
 
 [[package]]
 name = "kiln-vault"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "aho-corasick",
  "async-trait",

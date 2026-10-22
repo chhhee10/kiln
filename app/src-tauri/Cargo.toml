@@ -6,7 +6,7 @@
 # The frontend is the trunk build of ../ (kiln-app), bundled from ../dist.
 [package]
 name = "kiln-desktop"
-version = "0.1.1"
+version = "0.1.2"
 description = "Kiln desktop + Android shell (Tauri 2)"
 edition = "2021"
 license = "MIT OR Apache-2.0"

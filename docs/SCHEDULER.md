@@ -18,7 +18,7 @@ pub struct SchedulerDeps {
 }
 pub struct SchedulerConfig {
     pub data_dir: PathBuf,
-    pub worker_image: String,               // base image, e.g. "ghcr.io/chhhee10/kiln-worker:0.1.1"
+    pub worker_image: String,               // base image, e.g. "ghcr.io/chhhee10/kiln-worker:0.1.2"
     pub runner_bin: Option<PathBuf>,        // ProcessRuntime: host path of kiln-runner
     pub capacity: Capacity { ram_mb, reserve_mb, max_containers, max_tasks },  // RAM-aware, defaults from host RAM
     pub timeouts: RoleTimeouts { planner, builder, qa, reviewer, distiller },  // minutes
@@ -156,7 +156,7 @@ A daemon restart mid-run must lose no task state, events or transcripts.
   ```toml
   data_dir = "~/Library/Application Support/kiln"
   [server]  bind = "tailscale"  # or "127.0.0.1:7420" ; port = 7420 ; public_url = "https://mac-mini.tailnet.ts.net"
-  [runtime] kind = "docker"     # docker | process ; worker_image = "kiln-worker:0.1.1"
+  [runtime] kind = "docker"     # docker | process ; worker_image = "kiln-worker:0.1.2"
   [capacity] ram_mb = 0 (auto) ; reserve_mb = 6144 ; max_containers = 8 ; max_tasks = 4
   [github] mode = "app" | "token" | "local" ; app_id ; private_key_path ; token_env = "GITHUB_TOKEN"
   [harnesses.claude_sdk] label="Claude Agent SDK" models=["claude-opus-4-1", "claude-sonnet-4-5", ...]

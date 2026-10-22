@@ -44,7 +44,7 @@ auth_rate_per_minute = 20     # login/register/pairing attempts per client IP
 # "docker" = any Docker-compatible API (Docker Desktop, OrbStack, Colima, Podman).
 # "process" = host subprocesses with NO isolation (development/tests only).
 kind = "docker"
-worker_image = "ghcr.io/chhhee10/kiln-worker:0.1.1"
+worker_image = "ghcr.io/chhhee10/kiln-worker:0.1.2"
 # Host path of kiln-runner for the process runtime (default: next to kilnd).
 # runner_bin = "/usr/local/bin/kiln-runner"
 # docker_socket = "/Users/kiln/.orbstack/run/docker.sock"

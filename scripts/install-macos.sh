@@ -96,12 +96,17 @@ export PATH="$KILN_HOME/bin:$PATH"
 grep -q '.kiln/bin' ~/.zprofile 2>/dev/null || echo 'export PATH="$HOME/.kiln/bin:$PATH"; export KILN_DATA_DIR="$HOME/.kiln"' >> ~/.zprofile
 export KILN_DATA_DIR="$KILN_HOME"
 
-say "HTTPS on the tailnet: https://$TS_NAME"
-"$TS" serve --bg --https=443 "http://$TS_IP:7420" >/dev/null || {
-    echo "    tailscale serve failed: enable MagicDNS and HTTPS certificates in the"
-    echo "    Tailscale admin console (DNS page), then re-run this script."
-    exit 1
-}
+# HTTPS via `tailscale serve` when the tailnet has HTTPS certificates on;
+# otherwise plain HTTP on the tailnet (WireGuard encrypts it anyway).
+# KILN_HTTPS=0 skips HTTPS.
+if [ "${KILN_HTTPS:-1}" != 0 ] && "$TS" serve --bg --https=443 "http://$TS_IP:7420" >/dev/null 2>&1; then
+    PUBLIC_URL="https://$TS_NAME"
+else
+    PUBLIC_URL="http://$TS_NAME:7420"
+    echo "    Using plain HTTP on the tailnet. For HTTPS, enable HTTPS certificates in"
+    echo "    the Tailscale admin console (DNS page) and re-run this script."
+fi
+say "Kiln address: $PUBLIC_URL"
 
 if [ ! -f "$KILN_HOME/kiln.toml" ]; then
     say "Writing $KILN_HOME/kiln.toml"
@@ -111,7 +116,7 @@ data_dir = "$KILN_HOME"
 
 [server]
 bind = "tailscale"
-public_url = "https://$TS_NAME"
+public_url = "$PUBLIC_URL"
 
 [runtime]
 worker_image = "$IMAGE:${TAG#v}"   # kept current by re-running install-macos.sh
@@ -123,6 +128,7 @@ EOF
 else
     # Upgrade: point an existing config at this release's image.
     sed -i '' -E "s|^worker_image = \"[^\"]*\"|worker_image = \"$IMAGE:${TAG#v}\"|" "$KILN_HOME/kiln.toml"
+    sed -i '' -E "s|^public_url = \"[^\"]*\"|public_url = \"$PUBLIC_URL\"|" "$KILN_HOME/kiln.toml"
 fi
 
 VERSION=${TAG#v}
@@ -148,10 +154,10 @@ cat <<EOF
 
 Kiln is running.
 
-  Open:        https://$TS_NAME/app/   (from any device on your tailnet)
+  Open:        $PUBLIC_URL/app/   (from any device on your tailnet)
   Next:        create the admin account, then Settings → Add credential
                (model key or LiteLLM), then Admin → Add project.
-  Terminal:    kiln --server https://$TS_NAME
+  Terminal:    kiln --server $PUBLIC_URL
   Logs:        $KILN_HOME/logs/
   Apps:        https://github.com/$REPO/releases/latest
 

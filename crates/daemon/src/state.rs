@@ -60,9 +60,11 @@ pub struct Inner {
 }
 
 impl Inner {
-    /// Whether session cookies get the `Secure` attribute.
+    /// Whether session cookies get the `Secure` attribute: only when clients
+    /// reach kilnd over HTTPS. Plain HTTP is fine on a tailnet (WireGuard
+    /// already encrypts it), and browsers drop `Secure` cookies over HTTP.
     pub fn secure_cookies(&self) -> bool {
-        !self.dev || self.public_url.starts_with("https://")
+        self.public_url.starts_with("https://")
     }
 
     /// `/info` payload.
