@@ -132,6 +132,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: ". -> target\napp/src-tauri -> target"
+      - name: Free disk space
+        if: runner.os == 'Linux'
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
       - name: System packages
         run: |
           if [ "$RUNNER_OS" = macOS ]; then
@@ -163,6 +166,8 @@ jobs:
   android:
     runs-on: ubuntu-latest
     steps:
+      - name: Free disk space (keeps the Android SDK)
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@1.95.0
         with:
